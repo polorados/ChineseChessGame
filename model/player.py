@@ -18,3 +18,7 @@ class Player:
 
     def get_alive_pieces(self):
         return [piece for piece in self.pieces if piece.is_alive]
+        
+    def __str__(self):
+        return f"Player({self.name}) with {len(self.get_alive_pieces())} active pieces"
+
