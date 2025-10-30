@@ -1,9 +1,6 @@
 from enum import Enum
+from player import Player
 
-
-class Player(Enum):
-    P1 = 1
-    P2 = 2
 class Rank:
     ELEPHANT = 8
     LION = 7
@@ -30,3 +27,7 @@ class Piece:
         self.rank = rank
         self.owner = owner
         self.position = position
+    
+    def kill_piece(self):
+        self.is_alive = False
+        self.position = None
