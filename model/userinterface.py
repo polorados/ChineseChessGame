@@ -82,7 +82,10 @@ class UserInterface:
             
             for col in range(7):
                 cell = board[row][col]
-                symbol = cell if cell is not None else ''
+                if cell[0] == None : 
+                    symbol = cell[1].symbol if cell is not None else ''
+                else :
+                    symbol = cell[0].symbol
                 print("|", end="")
                 #print(symbol, end="        ")
                 for i in range((12-len(symbol))//2):
