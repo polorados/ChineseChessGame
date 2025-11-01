@@ -1,7 +1,7 @@
 class Board:
     def __init__(self, piece_list, cell_list):
-        self.rows = 7  # Swapped rows and cols
-        self.cols = 9
+        self.rows = 9  # Swapped rows and cols
+        self.cols = 7
         # Create grid where each position is a tuple (piece, cell)
         self.grid = [[(None, None) for _ in range(self.cols)] for _ in range(self.rows)]
         self.move_history = []
