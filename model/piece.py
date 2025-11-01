@@ -1,15 +1,6 @@
-from enum import Enum
+from rank import Rank
 from player import Player
 
-class Rank:
-    ELEPHANT = 8
-    LION = 7
-    TIGER = 6
-    LEOPARD = 5
-    WOLF = 4
-    DOG = 3
-    CAT = 2
-    RAT = 1
 class Position:
     row: int
     col: int
@@ -21,13 +12,13 @@ class Piece:
     position: Position
     is_alive: bool = True
 
-    def __init__(self, name, rank, owner, position):
+    def __init__(self, name, rank: Rank, owner: Player, position: Position):
         self.id = id(self)
         self.name = name
         self.rank = rank
         self.owner = owner
         self.position = position
     
-    def kill_piece(self):
+    def remove_piece(self):
         self.is_alive = False
         self.position = None
