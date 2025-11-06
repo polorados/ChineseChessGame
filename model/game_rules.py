@@ -3,7 +3,7 @@ from piece import Position
 
 class GameRules:
   def _init_(self):
-    pass,
+    pass
 
   def validate_move(self, piece, from_pos: Position, to_pos: Position, board):
     """Validate a piece's move according to Jungle Chess rules."""
