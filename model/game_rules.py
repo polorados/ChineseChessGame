@@ -136,32 +136,26 @@ def _is_river_jump(self, from_pos, to_pos, board):
 
   # Move one cell at a time until reaching destination
   r, c = fr + row_step, fc + col_step
-  
-  # found_river_cells = False
-  while (r != tr or c != tc) and (0 <= r < board.rows and 0 <= c < board.cols):
-    piece_in_path, cell = board.grid[r][c]
+  found_river_cells = False
+  while (r != tr or c != tc):
+    if not (0 <= r < board.rows and 0 <= c < board.cols):
+      return False
+      
+    _, cell = board.grid[r][c]
     terrain, _ = cell if cell else ("land", None)
-
-    # Jump path must only be through river cells
     if terrain != "river":
       return False
-
-    
-    # found_river_cells = True
-    # piece_in_path, _ = board.grid[r][c]
-    
-    # Rat blocks the jump
+      
+    found_river_cells = True
+    piece_in_path, _ = board.grid[r][c]
     if piece_in_path and piece_in_path.rank == Rank.RAT:
-      return False
-
+        return False
+      
     r += row_step
     c += col_step
-    # # Destination must not be river (jump must land on land/trap/den)
-    # dest_terrain, _ = board.cell_at(to_pos)
-    # if dest_terrain == "river":
-    #   return False
 
-    # # ensure there was at least one river cell jumped over
-    # return found_river_cells
+  dest_terrain, _ = board.cell_at(to_pos)
+  if dest_terrain == "river":
+    return False
 
-  return True
+  return found_river_cells
