@@ -1,3 +1,8 @@
+from __future__ import annotations
+from dataclasses import dataclass
+from enum import IntEnum
+from typing import Optional, List, Tuple
+
 class Position:
     row: int
     col: int
