@@ -1,0 +1,137 @@
+from rank import Rank
+from piece import Position
+
+class GameRules:
+  def _init_(self):
+    pass,
+
+  def validate_move(self, piece, from_pos: Position, to_pos: Position, board):
+    """Validate a piece's move according to Jungle Chess rules."""
+
+    # 1. Base checks
+    if piece is None:
+      return False, "No piece selected."
+
+    if not (0 <= to_pos.row < board.rows and 0 <= to_pos.col < board.cols):
+      return False, "Move out of board boundaries."
+
+    target_piece, target_cell = board.grid[to_pos.row][to_pos.col]
+    _, from_cell = board.grid[from_pos.row][from_pos.col]
+
+    dest_terrain, dest_owner = target_cell if target_cell else ("land", None)
+    start_terrain, _ = from_cell if from_cell else ("land", None)
+
+    # 2. Movement distance
+    row_diff = to_pos.row - from_pos.row
+    col_diff = to_pos.col - from_pos.col
+    delta_row, delta_col = abs(row_diff), abs(col_diff)
+    
+    is_one_step = (delta_row + delta_col == 1)
+
+    # 3. Special Jump Rule for Lion/Tiger
+    if piece.rank in [Rank.LION, Rank.TIGER]:
+      if not (is_one_step or self._is_river_jump(from_pos, to_pos, board)):
+        return False, "Lion/Tiger must move one step or jump across the river."
+    else:
+      if not is_one_step:
+        return False, "This animal can only move one step."
+
+    # 4. Terrain restrictions
+    if not self._can_enter_cell(piece, dest_terrain, dest_owner):
+      return False, f"{piece.name} cannot enter {dest_terrain}."
+
+    # 5. Capturing rules
+    if target_piece:
+      if target_piece.owner == piece.owner:
+        return False, "Cannot capture your own piece."
+
+      can_capture, reason = self._can_capture(piece, target_piece, dest_terrain)
+      if not can_capture:
+        return False, reason
+      return True, target_piece  # valid capture
+
+    # 6. Valid empty move
+    return True, None
+
+
+  #Can enter conditions
+  def _can_enter_cell(self, piece, terrain, cell_owner):
+    """Check whether the piece can legally enter a terrain type."""
+    if terrain == "river":
+       # Only Rat can enter river
+      return piece.rank == Rank.RAT 
+    elif terrain == "den":
+      # Cannot enter own den
+      return cell_owner != piece.owner
+    return True  # land or trap are always allowed
+
+  def _can_capture(self, attacker, defender, dest_terrain):
+    """Check Jungle Chess capturing rules."""
+
+    # 1. If defender is in own trap, attacker can always capture it
+    if dest_terrain == "trap" and defender.owner != attacker.owner:
+      return True, None
+
+    # 2. Elephant cannot capture Rat
+    if attacker.rank == Rank.ELEPHANT and defender.rank == Rank.RAT:
+      return False, "Elephant cannot capture Rat."
+
+    # 3. Rat can capture Elephant (special exception)
+    if attacker.rank == Rank.RAT and defender.rank == Rank.ELEPHANT:
+      return True, None
+
+    # 4. If attacker is Rat and it's in river, cannot capture piece on land
+    if attacker.rank == Rank.RAT and attacker.position:
+      attacker_cell = attacker.position
+      
+      _, current_cell = defender.owner.game.board.grid[attacker_cell.row][attacker_cell.col]
+      terrain, _ = current_cell if current_cell else ("land", None)
+      
+      if terrain == "river" and dest_terrain != "river":
+        return False, "Rat cannot capture from river to land."
+      if terrain != "river" and dest_terrain == "river":
+        return False, "Rat cannot capture from land to river."
+
+    # 5.  piece can capture if rank >= defender.rank
+    if attacker.rank >= defender.rank:
+      return True, None
+
+    return False, "Cannot capture higher-ranked piece."
+
+
+#Lion?Tiger Jump Rules
+def _is_river_jump(self, from_pos, to_pos, board):
+  """-The lion and tiger pieces may jump over a river by moving horizontally or vertically. 
+  -They move from a square on one edge of the river to the next non-water square on the other side. 
+  -Such a move is not allowed if there is a rat (whether friendly or enemy) on any of the intervening water squares. 
+  -The lion and tiger are allowed to capture enemy pieces by such jumping moves"""
+  fr, fc = from_pos.row, from_pos.col
+  tr, tc = to_pos.row, to_pos.col
+
+  # Must move in a straight line 
+  if fr != tr and fc != tc:
+    return False
+
+  # Move = Direction
+  row_step = 0 if fr == tr else (1 if tr > fr else -1)
+  col_step = 0 if fc == tc else (1 if tc > fc else -1)
+
+  # Move one cell at a time until reaching destination
+  r, c = fr + row_step, fc + col_step
+
+  while (r != tr or c != tc) and (0 <= r < board.rows and 0 <= c < board.cols):
+    piece_in_path, cell = board.grid[r][c]
+    terrain, _ = cell if cell else ("land", None)
+
+    # Jump path must only be through river cells
+    if terrain != "river":
+      return False
+
+    # Rat blocks the jump
+    if piece_in_path and piece_in_path.rank == Rank.RAT:
+      return False
+
+    r += row_step
+    c += col_step
+
+  return True
