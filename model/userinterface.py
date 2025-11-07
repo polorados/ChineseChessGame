@@ -130,10 +130,7 @@ class UserInterface:
         print("=" * 50)
         
         
-        if winner == 'w':
-            print("White wins!")
-        else :
-            print("Black wins!")
+        print(winner + " wins!")
 
         print("=" * 50)
 

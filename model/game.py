@@ -98,33 +98,35 @@ class Game:
     def move_piece(self, from_pos, to_pos):
         mover = self.board.piece_at(from_pos)
         if mover is None:
-            return False 
+            return False, "No piece at source."
         if mover.owner is not self.players[self.whose_turn]: #check whether mover's turn
-            return False
+            return False, "Not your turn."
         
-        is_valid, captured_piece = self.rules.validate_move(mover, from_pos, to_pos, self.board) #no valid move
+        # if is_valid == true: result = captured_piece, else result = msg
+        is_valid, result = self.rules.validate_move(mover, from_pos, to_pos, self.board) #no valid move
         if not is_valid:
-            return False
+            return False,result
         
         undo_object = {
             "piece": mover,
             "from_pos": from_pos,
             "to_pos": to_pos,
-            "captured": captured_piece,
+            "captured": result,
             "prev_turn": self.whose_turn
         }
         self.move_stack.append(undo_object) #record move for undo
 
         # remove dead piece from board
-        if captured_piece is not None:
-            captured_piece.is_alive = False
+        # result = captured_piece
+        if result is not None:
+            result.is_alive = False
             self.board.remove_piece_at(to_pos)
-            captured_piece.owner.remove_piece(captured_piece)
+            result.owner.remove_piece(result)
 
         self.board.move_piece(mover, to_pos)
-        self.record_move(mover, from_pos, to_pos, captured_piece)
+        self.record_move(mover, from_pos, to_pos, result)
         self.switch_turn()
-        return True
+        return True,"ok"
 
     #보류
     def record_move(self,piece_id,from_pos,to_pos, captured_piece):
@@ -134,7 +136,7 @@ class Game:
         #undo move from top of the stack
 
         if not self.move_stack:
-            return False
+            return False, "You just started the game."
         
         move = self.move_stack.pop()
 
@@ -155,7 +157,7 @@ class Game:
 
         self.whose_turn = prev_turn
 
-        return True
+        return True,"ok"
 
     def switch_turn(self):
         self.whose_turn = 1-self.whose_turn

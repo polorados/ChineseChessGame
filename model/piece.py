@@ -4,6 +4,10 @@ from player import Player
 class Position:
     row: int
     col: int
+
+    def __init__(self,row,col):
+        self.row = row
+        self.col = col
 class Piece:
     id: int
     name: str

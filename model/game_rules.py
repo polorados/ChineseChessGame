@@ -3,7 +3,7 @@ from board import Board
 from typing import Tuple, Union, Optional
 
 class GameRules:
-  def _init_(self):
+  def __init__(self):
     pass
 
   def validate_move(self, piece, from_pos: Position, to_pos: Position, board):
@@ -24,7 +24,7 @@ class GameRules:
     # start_terrain, _ = from_cell if from_cell else ("land", None)
     target_piece = board.piece_at(to_pos)
     dest_terrain, dest_owner = board.cell_at(to_pos)
-    start_terrain, _ = board.cell_at(from_pos)
+    start_terrain, _ = board.cell_at(from_pos)  
     
     # 2. Movement distance
     row_diff = to_pos.row - from_pos.row
@@ -79,7 +79,7 @@ class GameRules:
 
     # 1. If defender is in own trap, attacker can always capture it
     dest_terrain, dest_owner = board.cell_at(to_pos)
-    if dest_terrain == "trap" and defender.owner != attacker.owner:
+    if dest_terrain == "trap" and dest_owner is attacker.owner:
       return True, None
 
     # 2. Elephant cannot capture Rat
@@ -143,11 +143,12 @@ def _is_river_jump(self, from_pos, to_pos, board):
       
     _, cell = board.grid[r][c]
     terrain, _ = cell if cell else ("land", None)
+    terrain, _ = board.cell_at(Position(r, c))
     if terrain != "river":
       return False
       
     found_river_cells = True
-    piece_in_path, _ = board.grid[r][c]
+    piece_in_path = board.piece_at(Position(r, c))
     if piece_in_path and piece_in_path.rank == Rank.RAT:
         return False
       

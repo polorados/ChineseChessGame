@@ -54,6 +54,14 @@ class Board:
         self.grid[to_pos.row][to_pos.col] = (piece, to_pos_cell)
         piece.position = to_pos
 
+    def bound_check(self,pos):
+        return 0 <= pos.row < self.rows and 0 <= pos.col < self.cols
+    
+    def piece_at(self,pos):
+        return self.grid[pos.row][pos.col][0]
+    def cell_at(self,pos):
+        return self.grid[pos.row][pos.col][1]
+    
     # def is_valid_move(self, piece, new_position):
 
     #     row, col = new_position
