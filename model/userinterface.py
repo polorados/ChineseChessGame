@@ -99,3 +99,62 @@ class UserInterface:
         print(7*("+"+12*"-")+"+")
 
         print("\n      " + "            ".join("abcdefgh"))
+
+
+    def display_help(self):
+        """Display available commands"""
+        print("\n" + "=" * 50)
+        print("AVAILABLE COMMANDS")
+        print("=" * 50)
+        for cmd, desc in self.commands.items():
+            print(f"  {cmd:8} - {desc}")
+        print("=" * 50)
+
+    def display_move_prompt(self, current_player):
+        """Prompt for a move from the current player"""
+        player_name = "White" if current_player == 'w' else "Black"
+        print(f"\n{player_name}'s turn. Enter your move (e.g., 'a1 a2') or 'help' for commands:")
+
+    def display_invalid_move(self, message="Invalid move. Please try again."):
+        """Display invalid move message"""
+        print(f"\n{message}")
+
+    def display_valid_move(self, move_from, move_to, piece_symbol):
+        """Display confirmation of a valid move"""
+        print(f"\nMove accepted: {piece_symbol} from {move_from} to {move_to}")
+
+    def display_game_result(self, winner):
+        """Display game result (win, draw, resignation)"""
+        print("\n" + "=" * 50)
+        print("GAME OVER")
+        print("=" * 50)
+        
+        
+        if winner == 'w':
+            print("White wins!")
+        else :
+            print("Black wins!")
+
+        print("=" * 50)
+
+    def display_save_success(self, filename):
+        """Display successful save message"""
+        print(f"\nGame successfully saved to '{filename}'")
+
+    def display_load_success(self, filename):
+        """Display successful load message"""
+        print(f"\nGame successfully loaded from '{filename}'")
+
+    def display_resignation(self, player):
+        """Display resignation confirmation"""
+        player_name = "White" if player == 'w' else "Black"
+        print(f"\n⚐ {player_name} has resigned from the game.")
+
+    def display_quit_confirmation(self):
+        """Ask for confirmation before quitting"""
+        response = input("\nAre you sure you want to quit? (y/n): ").strip().lower()
+        return response in ['y', 'yes']
+    
+    def display_error(self, error_message):
+        """Display general error messages"""
+        print(f"\nError: {error_message}")
