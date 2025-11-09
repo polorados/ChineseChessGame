@@ -1,11 +1,11 @@
-from board import Board
-from player import Player
-from piece import Piece, Position
-from game_rules import GameRules
-from userinterface import UserInterface
-from save_game import SaveGame
+from model.board import Board
+from model.player import Player
+from model.piece import Piece, Position
+from model.game_rules import GameRules
+from view.userinterface import UserInterface
+from model.save_game import SaveGame
 from typing import Tuple
-from rank import Rank
+from model.rank import Rank
 
 
 RANK_MAP = {
@@ -55,7 +55,7 @@ class Game:
     move_history: list[str] #record in human readable string
 
     def __init__(self, player1, player2):
-        self.board = Board()
+        self.board = None
         self.rules = GameRules()
         self.players = [player1, player2]
         self.whose_turn = 0
@@ -83,7 +83,7 @@ class Game:
                     cell = ("land",None)
                 if chr == 't':
                     owner = self.players[0] if i < 3 else self.players[1]
-                    cell = ("trap",None)
+                    cell = ("trap",owner)
                 elif chr == 'd':
                     owner = self.players[0] if i < 3 else self.players[1]
                     cell = ("den",owner)
@@ -93,7 +93,9 @@ class Game:
         return ret
     
     def initial_board_setup(self):
-        self.board.setup_board(self.initialize_piece(), self.initialize_cell())
+        pieces = self.initialize_piece()
+        cells = self.initialize_cell()
+        self.board = Board(pieces, cells)
 
     def move_piece(self, from_pos, to_pos):
         mover = self.board.piece_at(from_pos)

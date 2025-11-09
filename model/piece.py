@@ -1,5 +1,5 @@
-from rank import Rank
-from player import Player
+from model.rank import Rank
+from model.player import Player
 
 class Position:
     row: int

@@ -1,6 +1,6 @@
 from model.piece import Position
 
-class CommandController:
+class GameController:
 
     def __init__(self,game,ui):
         self.game = game
@@ -12,7 +12,7 @@ class CommandController:
             "undo": self.cmd_undo,
             "status": self.cmd_status,
             "board": self.cmd_board,
-            "history": self.cmd_history,
+            #"history": self.cmd_history,
             "save": self.cmd_save,
             "load": self.cmd_load,
             "resign": self.cmd_resign,
@@ -22,7 +22,6 @@ class CommandController:
         }
 
     def run(self):
-        self.ui.display_welcome()
         while self.is_running:
             self.ui.display_move_prompt(self.current_whose_turn_w_or_b())
             inp = self.ui.get_user_input()
@@ -76,7 +75,7 @@ class CommandController:
             self.ui.display_error(msg)
             return
         
-        piece = self.board.piece_at(dst)
+        piece = self.game.board.piece_at(dst)
         self.ui.display_valid_move(src,dst,piece.name)
 
         is_over, winner_index = self.game.check_victory(piece,dst)

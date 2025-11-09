@@ -1,5 +1,5 @@
 class Player:
-    def _init_(self, name):
+    def __init__(self, name):
         self.id = id(self)
         self.name=name
         self.pieces=[]

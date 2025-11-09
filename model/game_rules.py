@@ -1,5 +1,6 @@
-from piece import Piece, Position, Rank 
-from board import Board  
+from model.piece import Piece, Position, Rank 
+from model.board import Board  
+from model.player import Player
 from typing import Tuple, Union, Optional
 
 class GameRules:

@@ -1,8 +1,8 @@
 import unittest
-from gamerules import GameRules
-from piece import Piece, Position, Rank
-from player import Player
-from game import Game
+from model.game_rules import GameRules
+from model.piece import Piece, Position, Rank
+from model.player import Player
+from model.game import Game
 
 class TestGameRules(unittest.TestCase):
     def setUp(self):

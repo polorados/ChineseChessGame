@@ -81,11 +81,22 @@ class UserInterface:
             print(7*("|"+12*" ")+"|")
             
             for col in range(7):
-                cell = board[row][col]
-                if cell[0] == None : 
-                    symbol = cell[1].symbol if cell is not None else ''
-                else :
-                    symbol = cell[0].symbol
+                piece, cell = board[row][col]
+                
+                if piece is not None:
+                    symbol = piece.name[0].upper() if hasattr(piece, "name") else "?"
+                else:
+                    if cell is None:
+                        symbol = ""
+                    elif cell[0] == "river":
+                        symbol = "~"
+                    elif cell[0] == "trap":
+                        symbol = "T"
+                    elif cell[0] == "den":
+                        symbol = "D"
+                    else:
+                        symbol = "."
+                        
                 print("|", end="")
                 #print(symbol, end="        ")
                 for i in range((12-len(symbol))//2):
