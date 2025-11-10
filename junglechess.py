@@ -568,3 +568,321 @@ class SaveGame:
             print(f" Error loading game: {e}")
             return None
 
+
+class GameController:
+
+    def __init__(self,game,ui):
+        self.game = game
+        self.ui = ui
+        self.is_running = True
+        
+        self.handlers = {
+            "move": self.cmd_move,
+            "undo": self.cmd_undo,
+            "status": self.cmd_status,
+            "board": self.cmd_board,
+            #"history": self.cmd_history,
+            "save": self.cmd_save,
+            "load": self.cmd_load,
+            "resign": self.cmd_resign,
+            "help": self.cmd_help,
+            "quit": self.cmd_quit,
+            "exit": self.cmd_quit
+        }
+
+    def run(self):
+        while self.is_running:
+            self.ui.display_move_prompt(self.current_whose_turn_w_or_b())
+            inp = self.ui.get_user_input()
+            if not inp:
+                continue
+            cmd, args = self.parse_tokens(inp)
+            self.handle(cmd,args)
+
+    def handle(self, cmd, args):
+        handler = self.handlers.get(cmd)
+        if handler is None:
+            self.ui.display_error("Unknown command. Type 'help' to see available commands.")
+        try:
+            handler(args)
+        except Exception as e:
+            self.ui.display_error(str(e))
+    
+    def parse_tokens(self, inp):
+        #args can be empty or list
+        parts = inp.strip().split()
+        if not parts:
+            return "",[]
+        return parts[0], parts[1:]
+    
+    def current_whose_turn_w_or_b(self):
+        if self.game.whose_turn == 0:
+            return 'w'
+        else:
+            return 'b'
+        
+    #### cmd handler #####
+    def cmd_help(self, args):
+        self.ui.display_help()
+    
+    def cmd_move(self, args):
+        """
+        move src dest
+        ex) move A3 A4
+        """
+        if len(args) != 2:
+            self.ui.display_error("Right Format: move <src> <dest> (move A3 A4)")
+            return
+        
+        arg1 = args[0]
+        arg2 = args[1]
+        src = self.parse_pos(arg1)
+        dst = self.parse_pos(arg2)
+
+        ok,msg = self.game.move_piece(src, dst)
+        if not ok:
+            self.ui.display_error(msg)
+            return
+        
+        piece = self.game.board.piece_at(dst)
+        self.ui.display_valid_move(src,dst,piece.name)
+
+        is_over, winner_index = self.game.check_victory(piece,dst)
+        if is_over:
+            winner = self.players[winner_index]
+            self.ui.display_game_result(winner.name)
+            self.is_running = False
+
+    def cmd_undo(self, args):
+        """
+        undo
+        """
+        ok,msg = self.game.undo_move()
+        if not ok:
+            self.ui.display_error(msg)
+
+    def cmd_status(self, args):
+        self.ui.display_game_status(self.game)
+    
+    def cmd_board(self, args):
+        grid = self.game.board.grid
+        if grid is None:
+            self.ui.display_error("Board does not exist")
+            return
+        self.ui.display_board(grid)
+
+    def cmd_resign(self, args):
+        current_turn = self.game.whose_turn
+        winner_index = 1-current_turn
+        winner = self.game.players[winner_index]
+
+        self.ui.display_game_result(winner.name)
+    
+    def cmd_save(self, args):
+        path = args[0] if args else "default_save.json"
+        ok, msg = self.game.save_game(path)
+        if ok:
+            self.ui.display_save_success(path)
+        else:
+            self.ui.display_error(msg)
+    def cmd_load(self, args):
+        path = args[0] if args else "default_save.json"
+        ok, msg = self.game.load_game(path)
+        if ok:
+            self.ui.display_load_success(path)
+        else:
+            self.ui.display_error(msg)
+
+    def cmd_quit(self, args):
+        if self.ui.display_quit_confirmation():
+            self.is_running = False
+    def parse_pos(self, s):
+        """
+        s=A3 -> A=col, 3=row
+        return Position
+        """
+        s = s.strip().lower()
+
+        if len(s) < 2:
+            return None
+        
+        row = s[1:]
+        col = s[0]
+        if col < 'a' or col > 'g':
+            return None
+        
+        row = int(row)
+        if not (1 <= row <= 9):
+            return None
+        col = ord(col) - ord('a')
+        row = 9 - row
+        return Position(row,col)
+
+class UserInterface:
+    def __init__(self):
+        self.commands = {
+            'help': 'Show available commands',
+            'move': 'Make a move (e.g., "e2 e4")',
+            'history': 'Show move history',
+            'status': 'Show current game status',
+            'resign': 'Resign from the game',
+            'save': 'Save the current game',
+            'load': 'Load a saved game',
+            'quit': 'Exit the game'
+        }
+
+    def display_welcome(self):
+        # Display a welcome message
+        print("=" * 50)
+        print("           WELCOME TO JUNGLE CHESS")
+        print("=" * 50)
+        print("\nCommands:")
+        for cmd, desc in self.commands.items():
+            print(f"  {cmd:8} - {desc}")
+        print("\nEnter 'help' at any time to see available commands.")
+        print("=" * 50)
+        print()
+
+    def get_user_input(self):
+        # Get command input from the user
+        try:
+            user_input = input("\nEnter command: ").strip().lower()
+            return user_input
+        except (EOFError, KeyboardInterrupt):
+            return "quit"
+
+    def display_game_status(self, game):
+        """Show the current game status"""
+        if not game:
+            print("No game in progress.")
+            return
+
+        print("\n" + "=" * 40)
+        print("CURRENT GAME STATUS")
+        print("=" * 40)
+        
+        # Display current player
+        current_player = "White" if game.current_player == 'w' else "Black"
+        print(f"Current turn: {current_player}")
+
+        print("=" * 40)
+
+    def display_move_history(self, history):
+        # Display the history of moves
+        if not history:
+            print("No moves have been made yet.")
+            return
+
+        print("\n" + "=" * 40)
+        print("MOVE HISTORY")
+        print("=" * 40)
+        
+        # Display moves in a chess notation format
+        for i, move in enumerate(history, 1):
+            move_number = (i + 1) // 2
+            if i % 2 == 1:  # White's move
+                print(f"white move {move_number}. {move}", end="")
+            else:  # Black's move
+                print(f"black move {move_number}. {move}")
+        
+        # If last move was white and no black response yet
+        if len(history) % 2 == 1:
+            print()  # New line for incomplete pair
+        
+        print("=" * 40)
+
+
+    def display_board(self, board):
+
+        print("\n      " + "            ".join("abcdefgh"))
+
+        for row in range(9):
+            print(7*("+"+12*"-")+"+")
+            print(7*("|"+12*" ")+"|")
+            
+            for col in range(7):
+                piece, cell = board[row][col]
+                
+                if piece is not None:
+                    symbol = piece.name[0].upper() if hasattr(piece, "name") else "?"
+                else:
+                    if cell is None:
+                        symbol = ""
+                    elif cell[0] == "river":
+                        symbol = "~"
+                    elif cell[0] == "trap":
+                        symbol = "T"
+                    elif cell[0] == "den":
+                        symbol = "D"
+                    else:
+                        symbol = "."
+                        
+                print("|", end="")
+                #print(symbol, end="        ")
+                for i in range((12-len(symbol))//2):
+                    print(end=" ")
+                print(symbol, end="")
+                for i in range(12-((12-len(symbol))//2)-len(symbol)):
+                    print(end=" ")
+            print("|")
+            print(7*("|"+12*" ")+"|", end="")
+            print()  # New line after each row
+        print(7*("+"+12*"-")+"+")
+
+        print("\n      " + "            ".join("abcdefgh"))
+
+
+    def display_help(self):
+        """Display available commands"""
+        print("\n" + "=" * 50)
+        print("AVAILABLE COMMANDS")
+        print("=" * 50)
+        for cmd, desc in self.commands.items():
+            print(f"  {cmd:8} - {desc}")
+        print("=" * 50)
+
+    def display_move_prompt(self, current_player):
+        """Prompt for a move from the current player"""
+        player_name = "White" if current_player == 'w' else "Black"
+        print(f"\n{player_name}'s turn. Enter your move (e.g., 'a1 a2') or 'help' for commands:")
+
+    def display_invalid_move(self, message="Invalid move. Please try again."):
+        """Display invalid move message"""
+        print(f"\n{message}")
+
+    def display_valid_move(self, move_from, move_to, piece_symbol):
+        """Display confirmation of a valid move"""
+        print(f"\nMove accepted: {piece_symbol} from {move_from} to {move_to}")
+
+    def display_game_result(self, winner):
+        """Display game result (win, draw, resignation)"""
+        print("\n" + "=" * 50)
+        print("GAME OVER")
+        print("=" * 50)
+        
+        
+        print(winner + " wins!")
+
+        print("=" * 50)
+
+    def display_save_success(self, filename):
+        """Display successful save message"""
+        print(f"\nGame successfully saved to '{filename}'")
+
+    def display_load_success(self, filename):
+        """Display successful load message"""
+        print(f"\nGame successfully loaded from '{filename}'")
+
+    def display_resignation(self, player):
+        """Display resignation confirmation"""
+        player_name = "White" if player == 'w' else "Black"
+        print(f"\n⚐ {player_name} has resigned from the game.")
+
+    def display_quit_confirmation(self):
+        """Ask for confirmation before quitting"""
+        response = input("\nAre you sure you want to quit? (y/n): ").strip().lower()
+        return response in ['y', 'yes']
+    
+    def display_error(self, error_message):
+        """Display general error messages"""
+        print(f"\nError: {error_message}")
