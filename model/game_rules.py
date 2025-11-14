@@ -1,7 +1,7 @@
-from model.piece import Piece, Position, Rank 
-from model.board import Board  
-from model.player import Player
+from .piece import Piece, Position, Rank 
+from .board import Board  
 from typing import Tuple, Union, Optional
+from .player import Player
 
 class GameRules:
   def __init__(self):
@@ -66,7 +66,7 @@ class GameRules:
   # def _can_enter_cell(self, piece, terrain, cell_owner):
   def _can_enter_cell(self, piece: Piece, terrain: str, cell_owner: Optional[Player]) -> bool:
     """Check whether the piece can legally enter a terrain type."""
-    if terrain == "river":
+    if terrain == "~":
        # Only Rat can enter river
       return piece.rank == Rank.RAT 
     elif terrain == "den":
@@ -118,46 +118,46 @@ class GameRules:
     return False, "Cannot capture higher-ranked piece."
 
 
-#Lion?Tiger Jump Rules
-def _is_river_jump(self, from_pos, to_pos, board):
-  """-The lion and tiger pieces may jump over a river by moving horizontally or vertically. 
-  -They move from a square on one edge of the river to the next non-water square on the other side. 
-  -Such a move is not allowed if there is a rat (whether friendly or enemy) on any of the intervening water squares. 
-  -The lion and tiger are allowed to capture enemy pieces by such jumping moves"""
-  fr, fc = from_pos.row, from_pos.col
-  tr, tc = to_pos.row, to_pos.col
+  #Lion?Tiger Jump Rules
+  def _is_river_jump(self, from_pos, to_pos, board):
+    """-The lion and tiger pieces may jump over a river by moving horizontally or vertically. 
+    -They move from a square on one edge of the river to the next non-water square on the other side. 
+    -Such a move is not allowed if there is a rat (whether friendly or enemy) on any of the intervening water squares. 
+    -The lion and tiger are allowed to capture enemy pieces by such jumping moves"""
+    fr, fc = from_pos.row, from_pos.col
+    tr, tc = to_pos.row, to_pos.col
 
-  # Must move in a straight line 
-  if fr != tr and fc != tc:
-    return False
-
-  # Move = Direction
-  row_step = 0 if fr == tr else (1 if tr > fr else -1)
-  col_step = 0 if fc == tc else (1 if tc > fc else -1)
-
-  # Move one cell at a time until reaching destination
-  r, c = fr + row_step, fc + col_step
-  found_river_cells = False
-  while (r != tr or c != tc):
-    if not (0 <= r < board.rows and 0 <= c < board.cols):
+    # Must move in a straight line 
+    if fr != tr and fc != tc:
       return False
-      
-    _, cell = board.grid[r][c]
-    terrain, _ = cell if cell else ("land", None)
-    terrain, _ = board.cell_at(Position(r, c))
-    if terrain != "river":
-      return False
-      
-    found_river_cells = True
-    piece_in_path = board.piece_at(Position(r, c))
-    if piece_in_path and piece_in_path.rank == Rank.RAT:
+
+    # Move = Direction
+    row_step = 0 if fr == tr else (1 if tr > fr else -1)
+    col_step = 0 if fc == tc else (1 if tc > fc else -1)
+
+    # Move one cell at a time until reaching destination
+    r, c = fr + row_step, fc + col_step
+    found_river_cells = False
+    while (r != tr or c != tc):
+      if not (0 <= r < board.rows and 0 <= c < board.cols):
         return False
-      
-    r += row_step
-    c += col_step
+        
+      _, cell = board.grid[r][c]
+      terrain, _ = cell if cell else ("land", None)
+      terrain, _ = board.cell_at(Position(r, c))
+      if terrain != "~":
+        return False
+        
+      found_river_cells = True
+      piece_in_path = board.piece_at(Position(r, c))
+      if piece_in_path and piece_in_path.rank == Rank.RAT:
+          return False
+        
+      r += row_step
+      c += col_step
 
-  dest_terrain, _ = board.cell_at(to_pos)
-  if dest_terrain == "river":
-    return False
+    dest_terrain, _ = board.cell_at(to_pos)
+    if dest_terrain == "~":
+      return False
 
-  return found_river_cells
+    return found_river_cells

@@ -3,6 +3,7 @@ class Player:
         self.id = id(self)
         self.name=name
         self.pieces=[]
+        self.undos=3
 
     def add_piece(self, piece):
         if piece not in self.pieces:
