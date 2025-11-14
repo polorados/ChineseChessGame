@@ -136,7 +136,7 @@ def main():
                     print(message)
                     time.sleep(0.5)
                     if result == True:
-                        print(f"{game.players[game.whose_turn].name} has used an undo. Remaining undos: {game.players[game.whose_turn].undos}")
+                        print(f"{game.players[game.whose_turn].name} has used an undo. Remaining undos: {game.players[game.whose_turn].undos-1}")
                         game.players[game.whose_turn].undos -= 1
                         time.sleep(0.5)
                         continue
