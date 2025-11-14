@@ -29,7 +29,7 @@ class Board:
     def place(self, piece, pos):
         # place dead piece for undo
         cell = self.grid[pos.row][pos.col][1]
-        self.grid[pos.row][pos.col][0] = (piece,cell)
+        self.grid[pos.row][pos.col] = (piece,cell)
         piece.position = pos
 
     def remove_piece_at(self, pos):
@@ -42,7 +42,7 @@ class Board:
     def move_piece(self, piece, to_pos):
         #just move the cell without validation
         if piece is None:
-            return
+            return 
         from_pos = piece.position
         if from_pos is None:
             return
@@ -58,7 +58,9 @@ class Board:
         return 0 <= pos.row < self.rows and 0 <= pos.col < self.cols
     
     def piece_at(self,pos):
+
         return self.grid[pos.row][pos.col][0]
+    
     def cell_at(self,pos):
         return self.grid[pos.row][pos.col][1]
     

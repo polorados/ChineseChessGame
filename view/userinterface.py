@@ -6,10 +6,23 @@ class UserInterface:
             'history': 'Show move history',
             'status': 'Show current game status',
             'resign': 'Resign from the game',
+            'undo': "Undo previous player's last move",
             'save': 'Save the current game',
             'load': 'Load a saved game',
             'quit': 'Exit the game'
         }
+    
+    def display_welcome2(self):
+        # Display a welcome message
+        print("=" * 50)
+        print("           WELCOME TO JUNGLE CHESS")
+        print("=" * 50)
+        while True:
+            choice = input("Load saved game or start new? (load/new): ").strip().lower()
+            if choice in ("load", "new"):
+                return choice
+            print("Please type 'load' or 'new'.")
+        
 
     def display_welcome(self):
         # Display a welcome message
@@ -30,6 +43,38 @@ class UserInterface:
             return user_input
         except (EOFError, KeyboardInterrupt):
             return "quit"
+            
+    def prompt_load_or_new(self) -> str:
+        while True:
+            choice = input("Load saved game or start new? (load/new): ").strip().lower()
+            if choice in ("load", "new"):
+                return choice
+            print("Please type 'load' or 'new'.")
+
+    def prompt_filename(self) -> str:
+        while True:
+            filename = input("Enter filename you want to load(default 'game.jungle'): ").strip()
+            if filename == "":
+                filename = "game.jungle"
+            return filename
+
+    def confirm(self, prompt: str) -> bool:
+        ans = input(prompt).strip().lower()
+        return ans in ("y", "yes")
+    
+    def get_player_names(self):
+        """Get player names from user input"""
+        print("=== NEW GAME SETUP ===")
+        player1 = input("Enter name for Player 1 (White): ").strip()
+        player2 = input("Enter name for Player 2 (Black): ").strip()
+        
+        # Set default names if empty
+        if not player1:
+            player1 = "Player 1"
+        if not player2:
+            player2 = "Player 2"
+        
+        return player1, player2
 
     def display_game_status(self, game):
         """Show the current game status"""
@@ -38,12 +83,15 @@ class UserInterface:
             return
 
         print("\n" + "=" * 40)
-        print("CURRENT GAME STATUS")
-        print("=" * 40)
-        
+
         # Display current player
-        current_player = "White" if game.current_player == 'w' else "Black"
-        print(f"Current turn: {current_player}")
+        
+        current_player = game.players[game.whose_turn].name
+        if current_player == game.players[0].name:
+            position = "top"
+        else: 
+            position = "bottom"
+        print(f"Current turn: {current_player} ({position})")
 
         print("=" * 40)
 
@@ -54,7 +102,7 @@ class UserInterface:
             return
 
         print("\n" + "=" * 40)
-        print("MOVE HISTORY")
+        print("MOVE HISTORY (piece_moved, from, to, captured_piece)")
         print("=" * 40)
         
         # Display moves in a chess notation format
@@ -73,19 +121,22 @@ class UserInterface:
 
 
     def display_board(self, board):
-
-        print("\n      " + "            ".join("abcdefgh"))
+        print("\n        " + "            ".join("abcdefg"))
 
         for row in range(9):
+            print("  ", end="")
             print(7*("+"+12*"-")+"+")
+            print("  ", end="")
             print(7*("|"+12*" ")+"|")
-            
+            print(f"{9-row} ", end="")
             for col in range(7):
+                
                 cell = board[row][col]
                 if cell[0] == None : 
-                    symbol = cell[1].symbol if cell is not None else ''
+                    symbol = cell[1][0] if cell[1][0] != 'land' else ''
                 else :
                     symbol = cell[0].symbol
+                
                 print("|", end="")
                 #print(symbol, end="        ")
                 for i in range((12-len(symbol))//2):
@@ -93,12 +144,15 @@ class UserInterface:
                 print(symbol, end="")
                 for i in range(12-((12-len(symbol))//2)-len(symbol)):
                     print(end=" ")
-            print("|")
+            print("|", end="")
+            print(f" {9-row}")
+            print("  ", end="")
             print(7*("|"+12*" ")+"|", end="")
             print()  # New line after each row
+        print("  ", end="")
         print(7*("+"+12*"-")+"+")
 
-        print("\n      " + "            ".join("abcdefgh"))
+        print("\n        " + "            ".join("abcdefg"))
 
 
     def display_help(self):
@@ -110,10 +164,18 @@ class UserInterface:
             print(f"  {cmd:8} - {desc}")
         print("=" * 50)
 
-    def display_move_prompt(self, current_player):
+    def display_move_prompt(self, game):
         """Prompt for a move from the current player"""
-        player_name = "White" if current_player == 'w' else "Black"
-        print(f"\n{player_name}'s turn. Enter your move (e.g., 'a1 a2') or 'help' for commands:")
+        player_name = game.players[game.whose_turn].name
+        try:
+            user_input1 = input(f"\n{player_name}'s turn. Which piece do you want to move? give coordinates (example : a2)").strip().lower()
+            origin = user_input1
+            user_input2 = input("Where do you want to move it to? give coordinates (example : a3)").strip().lower()
+            destination = user_input2
+            return origin, destination
+        except (EOFError, KeyboardInterrupt):
+            return "quit"
+ 
 
     def display_invalid_move(self, message="Invalid move. Please try again."):
         """Display invalid move message"""
@@ -142,10 +204,11 @@ class UserInterface:
         """Display successful load message"""
         print(f"\nGame successfully loaded from '{filename}'")
 
-    def display_resignation(self, player):
+    def display_resignation(self, player_name):
         """Display resignation confirmation"""
-        player_name = "White" if player == 'w' else "Black"
-        print(f"\n⚐ {player_name} has resigned from the game.")
+        response = input(f"\n{player_name}, are you sure you want to quit? (y/n): ").strip().lower()
+        return response in ['y', 'yes']
+        
 
     def display_quit_confirmation(self):
         """Ask for confirmation before quitting"""

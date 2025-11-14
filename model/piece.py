@@ -1,5 +1,5 @@
-from rank import Rank
-from player import Player
+from .rank import Rank
+from .player import Player
 
 class Position:
     row: int
@@ -22,6 +22,7 @@ class Piece:
         self.rank = rank
         self.owner = owner
         self.position = position
+        self.symbol = owner.name[0] + name[0] + str(self.rank.value)
     
     def remove_piece(self):
         self.is_alive = False

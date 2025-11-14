@@ -1,11 +1,30 @@
-from board import Board
-from player import Player
-from piece import Piece, Position
-from game_rules import GameRules
-from userinterface import UserInterface
-from save_game import SaveGame
+from .board import Board
+from .player import Player
+from .piece import Piece, Position
+from .game_rules import GameRules
+from view.userinterface import UserInterface
+from .save_game import SaveGame
 from typing import Tuple
-from rank import Rank
+from .rank import Rank
+
+def convert_indices_to_coordinate(row, col):
+    """
+    Convert (row, col) indices back to coordinate like 'a1', 'g9', etc.
+    Grid: left to right abcdefg, top to bottom 987654321
+    Example: row 8, col 0 = 'a1'
+    """
+    if not (0 <= row <= 8 and 0 <= col <= 6):
+        raise ValueError("Row must be 0-8, col must be 0-6")
+    
+    # Convert column index to letter (0=a, 1=b, 2=c, 3=d, 4=e, 5=f, 6=g)
+    letter = chr(ord('a') + col)
+    
+    # Convert row index to number
+    # Top row is row index 0 = 9, bottom row is row index 8 = 1
+    # So: 0->9, 1->8, 2->7, 3->6, 4->5, 5->4, 6->3, 7->2, 8->1
+    number = 9 - row
+    
+    return f"{letter}{number}"
 
 
 RANK_MAP = {
@@ -55,12 +74,15 @@ class Game:
     move_history: list[str] #record in human readable string
 
     def __init__(self, player1, player2):
-        self.board = Board()
-        self.rules = GameRules()
         self.players = [player1, player2]
+        pieces = self.initialize_piece()
+        cells = self.initialize_cell()
+        self.board = Board(pieces, cells)
+        self.rules = GameRules()
         self.whose_turn = 0
         self.move_stack = []
         self.move_history = []
+
     
     def initialize_piece(self):
         ret = []
@@ -73,6 +95,11 @@ class Game:
                 pos = Position(i,j)
                 piece = Piece(chr,rank,owner,pos)
                 ret.append((i,j,piece))
+        for i,j,piece in ret:
+            if piece.owner == self.players[0]:
+                self.players[0].add_piece(piece)
+            else: self.players[1].add_piece(piece)
+
         return ret
     
     def initialize_cell(self):
@@ -83,17 +110,17 @@ class Game:
                     cell = ("land",None)
                 if chr == 't':
                     owner = self.players[0] if i < 3 else self.players[1]
-                    cell = ("trap",None)
+                    cell = ("trap",owner)
                 elif chr == 'd':
                     owner = self.players[0] if i < 3 else self.players[1]
                     cell = ("den",owner)
-                elif chr == '~':
-                    cell = ("river",None)
+                elif chr == 'r':
+                    cell = ("~",None)
                 ret.append((i,j,cell))
         return ret
     
-    def initial_board_setup(self):
-        self.board.setup_board(self.initialize_piece(), self.initialize_cell())
+    # def initial_board_setup(self):
+    #     self.board.setup_board(self.initialize_piece(), self.initialize_cell())
 
     def move_piece(self, from_pos, to_pos):
         mover = self.board.piece_at(from_pos)
@@ -111,11 +138,11 @@ class Game:
             "piece": mover,
             "from_pos": from_pos,
             "to_pos": to_pos,
-            "captured": result,
+            "captured_piece": result,
             "prev_turn": self.whose_turn
         }
         self.move_stack.append(undo_object) #record move for undo
-
+        result2 = result
         # remove dead piece from board
         # result = captured_piece
         if result is not None:
@@ -124,13 +151,18 @@ class Game:
             result.owner.remove_piece(result)
 
         self.board.move_piece(mover, to_pos)
-        self.record_move(mover, from_pos, to_pos, result)
+        self.record_move(mover.name, from_pos.row, from_pos.col, to_pos.row, to_pos.col, result2)
         self.switch_turn()
-        return True,"ok"
+        return True,"Move successful."
 
     #보류
-    def record_move(self,piece_id,from_pos,to_pos, captured_piece):
-        self.move_history.append((piece_id,from_pos,to_pos,captured_piece))
+    def record_move(self,piece_id,from_posx, from_posy, to_posx, to_posy, captured_piece):
+        captured_piece_name = "None"
+        origin = convert_indices_to_coordinate(from_posx, from_posy)
+        destination = convert_indices_to_coordinate(to_posx, to_posy)
+        if captured_piece:
+            captured_piece_name = captured_piece.name
+        self.move_history.append((piece_id,origin, destination ,captured_piece_name))
 
     def undo_move(self): 
         #undo move from top of the stack
@@ -156,8 +188,9 @@ class Game:
             captured_piece.owner.add_piece(captured_piece)
 
         self.whose_turn = prev_turn
+        self.move_history.pop()  # Remove last move from history
 
-        return True,"ok"
+        return True,"Move undone."
 
     def switch_turn(self):
         self.whose_turn = 1-self.whose_turn
@@ -168,12 +201,12 @@ class Game:
     def has_alive_pieces(self, owner_idx):
         player = self.players[owner_idx]
         
-        return player.get_alive_pieces() > 0
+        return len(player.get_alive_pieces()) > 0
     
     def check_victory(self,mover,to_pos):
         # return (bool,winner). winner = None if bool = False
         cell = self.board.grid[to_pos.row][to_pos.col][1]
-        mover_idx = self.get_owner_idx(mover.owner)
+        mover_idx = self.get_owner_idx(mover)
 
         if cell[0] == "den":
             den_owner_idx = 0 if cell[1] == self.players[0] else 1
