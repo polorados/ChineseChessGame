@@ -35,11 +35,11 @@ def main():
     ui = UserInterface()
     choice = ui.display_welcome2()
     if choice == "load":
-        filename = ui.prompt_filename()
+        filename = ui.prompt_filename_load()
         game = SaveGame.load_game(filename)
 
-        print(f"New game cell type: {type(game.board.grid[3][0][1][0])}")
-        print(f"New game cell value: {repr(game.board.grid[3][0][1][0])}")
+        # print(f"New game cell type: {type(game.board.grid[3][0][1][0])}")
+        # print(f"New game cell value: {repr(game.board.grid[3][0][1][0])}")
 
         if game is None:
             if ui.confirm("Start a new game instead? (y/n):"):
@@ -145,13 +145,13 @@ def main():
                         continue
             
             if user_input == 'save':
-                filename = ui.prompt_filename()
+                filename = ui.prompt_filename_save()
                 SaveGame.save_game(game, filename)
                 print(f"Game saved to {filename}")
 
-                loaded_game = SaveGame.load_game(filename)
-                print(f"Loaded game cell type: {type(loaded_game.board.grid[3][0][1][0])}")
-                print(f"Loaded game cell value: {repr(loaded_game.board.grid[3][0][1][0])}")
+                # loaded_game = SaveGame.load_game(filename)
+                # print(f"Loaded game cell type: {type(loaded_game.board.grid[3][0][1][0])}")
+                # print(f"Loaded game cell value: {repr(loaded_game.board.grid[3][0][1][0])}")
 
                 time.sleep(0.5)
                 display_board = False

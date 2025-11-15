@@ -1,3 +1,8 @@
+import random
+import string
+from model.save_game import SaveGame
+import time
+
 class UserInterface:
     def __init__(self):
         self.commands = {
@@ -19,9 +24,12 @@ class UserInterface:
         print("=" * 50)
         while True:
             choice = input("Load saved game or start new? (load/new): ").strip().lower()
+            print()
             if choice in ("load", "new"):
                 return choice
             print("Please type 'load' or 'new'.")
+            print()
+            time.sleep(0.5)
         
 
     def display_welcome(self):
@@ -43,20 +51,50 @@ class UserInterface:
             return user_input
         except (EOFError, KeyboardInterrupt):
             return "quit"
-            
+    #not used i think       
     def prompt_load_or_new(self) -> str:
         while True:
             choice = input("Load saved game or start new? (load/new): ").strip().lower()
+            print()
             if choice in ("load", "new"):
                 return choice
             print("Please type 'load' or 'new'.")
+            print()
+            time.sleep(0.5)
 
-    def prompt_filename(self) -> str:
-        while True:
+    def prompt_filename_load(self) -> str:
+        while True: #try to remove this one
+            available_files = SaveGame.get_jungle_save_files()
+            if available_files:
+                print("Available save files:")
+                for f in available_files:
+                    print(f" - {f}")
             filename = input("Enter filename you want to load(default 'game.jungle'): ").strip()
+            print()
             if filename == "":
                 filename = "game.jungle"
-            return filename
+            else :
+                if not filename.endswith(".jungle"):
+                    filename += ".jungle"
+            if filename in available_files:
+                return filename
+            print(f"File '{filename}' does not exist give an existing file name.")
+            print()
+            time.sleep(0.5)
+        
+    def prompt_filename_save(self) -> str:
+        available_files = SaveGame.get_jungle_save_files()
+        if available_files:
+            print("Existing save files (don't pick the same name as it will overwrite):")
+            for f in available_files:
+                print(f" - {f}")
+        filename = input("Enter filename to save the game (default 'game.jungle'): ").strip()
+        if filename == "":
+            filename = "game.jungle"
+        else :
+            if not filename.endswith(".jungle"):
+                filename += ".jungle"
+        return filename
 
     def confirm(self, prompt: str) -> bool:
         ans = input(prompt).strip().lower()
@@ -68,11 +106,16 @@ class UserInterface:
         player1 = input("Enter name for Player 1 (White): ").strip()
         player2 = input("Enter name for Player 2 (Black): ").strip()
         
-        # Set default names if empty
+        def generate_random_name():
+            return ''.join(random.choices(string.ascii_letters + string.digits, k=8))
+        
         if not player1:
-            player1 = "Player 1"
+            player1 = generate_random_name()
         if not player2:
-            player2 = "Player 2"
+            player2 = generate_random_name()
+        
+        player1 = "*" + player1 + "*"
+        player2 = "#" + player2 + "#"
         
         return player1, player2
 
@@ -88,9 +131,9 @@ class UserInterface:
         
         current_player = game.players[game.whose_turn].name
         if current_player == game.players[0].name:
-            position = "top"
+            position = "top *"
         else: 
-            position = "bottom"
+            position = "bottom #"
         print(f"Current turn: {current_player} ({position})")
 
         print("=" * 40)
