@@ -144,6 +144,17 @@ def main():
                         display_board = False
                         continue
             
+            if user_input == 'load':
+                filename = ui.prompt_filename_load()
+                loaded_game = SaveGame.load_game(filename)
+                if loaded_game is not None:
+                    game = loaded_game
+                    print(f"Game loaded from {filename}")
+                else:
+                    print(f"Failed to load game from {filename}")
+                time.sleep(0.5)
+                continue
+            
             if user_input == 'save':
                 filename = ui.prompt_filename_save()
                 SaveGame.save_game(game, filename)
