@@ -161,3 +161,46 @@ class GameRules:
       return False
 
     return found_river_cells
+
+  def get_valid_moves(self, piece, board):
+    """Return all valid destination positions for the given piece."""
+    
+    if piece is None or not piece.is_alive:
+        return []
+
+    moves = []
+
+    # Four directions
+    directions = [
+        (1, 0),
+        (-1, 0),
+        (0, 1),
+        (0, -1),
+    ]
+
+    from_pos = piece.position
+
+    for dr, dc in directions:
+        to_row = from_pos.row + dr
+        to_col = from_pos.col + dc
+        to_pos = Position(to_row, to_col)
+
+        # 1) Skip out-of-bound moves
+        if not (0 <= to_row < board.rows and 0 <= to_col < board.cols):
+            continue
+
+        # 2) Lion/Tiger river jump attempt
+        if piece.rank in (Rank.LION, Rank.TIGER):
+            if self._is_river_jump(from_pos, to_pos, board):
+                # If jump is valid
+                is_valid, _ = self.validate_move(piece, from_pos, to_pos, board)
+                if is_valid:
+                    moves.append(to_pos)
+                continue  # Don't try 1-step move for this direction
+
+        # 3) Normal one-step move
+        is_valid, _ = self.validate_move(piece, from_pos, to_pos, board)
+        if is_valid:
+            moves.append(to_pos)
+
+    return moves

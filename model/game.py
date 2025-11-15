@@ -6,6 +6,7 @@ from view.userinterface import UserInterface
 from .save_game import SaveGame
 from typing import Tuple
 from .rank import Rank
+import copy
 
 def convert_indices_to_coordinate(row, col):
     """
@@ -136,8 +137,8 @@ class Game:
         
         undo_object = {
             "piece": mover,
-            "from_pos": from_pos,
-            "to_pos": to_pos,
+            "from_pos": copy.deepcopy(from_pos),
+            "to_pos": copy.deepcopy(to_pos),
             "captured_piece": result,
             "prev_turn": self.whose_turn
         }
@@ -155,7 +156,6 @@ class Game:
         self.switch_turn()
         return True,"Move successful."
 
-    #보류
     def record_move(self,piece_id,from_posx, from_posy, to_posx, to_posy, captured_piece):
         captured_piece_name = "None"
         origin = convert_indices_to_coordinate(from_posx, from_posy)
@@ -178,7 +178,9 @@ class Game:
         captured_piece = move["captured_piece"]
         prev_turn = move["prev_turn"]
 
-        self.board.move_piece(mover, from_pos)
+        self.board.remove_piece_at(to_pos)
+        
+        self.board.place(mover, from_pos)
         mover.position = from_pos
 
         if captured_piece is not None:
@@ -187,9 +189,10 @@ class Game:
             self.board.place(captured_piece, to_pos)
             captured_piece.owner.add_piece(captured_piece)
 
-        self.whose_turn = prev_turn
-        self.move_history.pop()  # Remove last move from history
-
+        self.whose_turn = prev_turn 
+        if self.move_history:
+            self.move_history.pop()  # Remove last move from history
+        
         return True,"Move undone."
 
     def switch_turn(self):
@@ -216,6 +219,13 @@ class Game:
             return True, mover_idx
         
         return False, None
+    
+    def check_victory_condition(self):
+        if not self.has_alive_pieces(0):
+            return True
+        if not self.has_alive_pieces(1):
+            return True
+        return False
 
 
     def save_game(self):
