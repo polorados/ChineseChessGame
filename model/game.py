@@ -83,6 +83,7 @@ class Game:
         self.whose_turn = 0
         self.move_stack = []
         self.move_history = []
+        self.recording = False
 
     
     def initialize_piece(self):
@@ -155,7 +156,8 @@ class Game:
             result.owner.remove_piece(result)
 
         self.board.move_piece(mover, to_pos)
-        self.record_move(mover.name, from_pos.row, from_pos.col, to_pos.row, to_pos.col, result2)
+        if not self.recording:
+            self.record_move(mover.name, from_pos.row, from_pos.col, to_pos.row, to_pos.col, result2)
         self.players[self.whose_turn].moved_this_turn = True
         return True,"Move successful."
 
@@ -200,7 +202,9 @@ class Game:
         return True,"Move undone."
 
     def switch_turn(self):
+        self.players[self.whose_turn].moved_this_turn = False
         self.whose_turn = 1-self.whose_turn
+
 
     def get_owner_idx(self, owner):
         return 0 if owner is self.players[0] else 1

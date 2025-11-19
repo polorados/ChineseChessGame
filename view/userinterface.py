@@ -15,8 +15,14 @@ class UserInterface:
             'undo': "Undo the most recent made move",
             'save': 'Save the current game',
             'load': 'Load a saved game',
+            'record': 'Record move history to a file',
+            'playback': 'Play back a recorded game',
             'quit': 'Exit the game'
             
+        }
+        self.playback_commands = {
+            'next': 'Show next move in playback',
+            'exit': 'Exit playback mode'
         }
     
     def display_welcome2(self):
@@ -83,6 +89,26 @@ class UserInterface:
             print(f"File '{filename}' does not exist give an existing file name.")
             print()
             time.sleep(0.5)
+
+    def prompt_filename_playback(self) -> str:
+        while True:
+            available_files = SaveGame.get_jungle_record_files()
+            if available_files:
+                print("Available record files:")
+                for f in available_files:
+                    print(f" - {f}")
+            filename = input("Enter filename you want to playback (default 'game.record'): ").strip()
+            print()
+            if filename == "":
+                filename = "game.record"
+            else :
+                if not filename.endswith(".record"):
+                    filename += ".record"
+            if filename in available_files:
+                return filename
+            print(f"File '{filename}' does not exist give an existing file name.")
+            print()
+            time.sleep(0.5)
         
     def prompt_filename_save(self) -> str:
         available_files = SaveGame.get_jungle_save_files()
@@ -96,6 +122,20 @@ class UserInterface:
         else :
             if not filename.endswith(".jungle"):
                 filename += ".jungle"
+        return filename
+    
+    def prompt_filename_record(self) -> str:
+        available_files = SaveGame.get_jungle_record_files()
+        if available_files:
+            print("Existing save files (don't pick the same name as it will overwrite):")
+            for f in available_files:
+                print(f" - {f}")
+        filename = input("Enter filename to record the game (default 'game.record'): ").strip()
+        if filename == "":
+            filename = "game.record"
+        else :
+            if not filename.endswith(".record"):
+                filename += ".record"
         return filename
 
     def confirm(self, prompt: str) -> bool:
@@ -208,6 +248,15 @@ class UserInterface:
         for cmd, desc in self.commands.items():
             print(f"  {cmd:8} - {desc}")
         print("=" * 50)
+
+    def display_help_playback(self):
+        print("\n" + "=" * 50)
+        print("AVAILABLE COMMANDS")
+        print("=" * 50)
+        for cmd, desc in self.playback_commands.items():
+            print(f"  {cmd:8} - {desc}")
+        print("=" * 50)
+
 
     def display_move_prompt(self, game):
         """Prompt for a move from the current player"""

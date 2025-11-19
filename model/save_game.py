@@ -10,7 +10,7 @@ class SaveGame:
         try:
             with open(filename, 'wb') as file:
                 pickle.dump(game, file)
-            print(f"Game successfully saved to '{filename}'")
+            
         except Exception as e:
             print(f"Error saving game: {e}")
 
@@ -39,6 +39,21 @@ class SaveGame:
         for filename in os.listdir('.'):
             # Check if file ends with .jungle and is a file (not directory)
             if filename.endswith('.jungle') and os.path.isfile(filename):
+                jungle_files.append(filename)
+        
+        return jungle_files
+
+    @staticmethod
+    def get_jungle_record_files():
+        """
+        Returns a list of all .record save files in the current directory.
+        """
+        jungle_files = []
+        
+        # Get all files in current directory
+        for filename in os.listdir('.'):
+            # Check if file ends with .jungle and is a file (not directory)
+            if filename.endswith('.record') and os.path.isfile(filename):
                 jungle_files.append(filename)
         
         return jungle_files
