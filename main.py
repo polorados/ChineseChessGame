@@ -55,8 +55,8 @@ def main():
         player2 = Player(player2_name)
         game = Game(player1, player2)
 
-        print(f"New game cell type: {type(game.board.grid[3][0][1][0])}")
-        print(f"New game cell value: {repr(game.board.grid[3][0][1][0])}")
+        # print(f"New game cell type: {type(game.board.grid[3][0][1][0])}")
+        # print(f"New game cell value: {repr(game.board.grid[3][0][1][0])}")
     
     display_board = True
     while True:
@@ -91,10 +91,11 @@ def main():
                 print(message)
                 time.sleep(0.5)
                 if result == True: 
-                    if game.whose_turn == 0:
-                        mover = game.players[1]
-                    else:
-                        mover = game.players[0]
+                    mover = game.players[game.whose_turn]
+                    # if game.whose_turn == 0:
+                    #     mover = game.players[0]
+                    # else:
+                    #     mover = game.players[0]
                     result1, playerwhowon = game.check_victory(mover,destination_position)
                     if result1 == True:
                         ui.display_game_result(game.players[playerwhowon].name)
@@ -126,23 +127,37 @@ def main():
 
             
             if user_input == 'undo':
-                if game.players[1-game.whose_turn].undos <=0:
-                    print("No undos left for opponent.")
+                if not game.move_stack:
+                    print("No moves to undo.")
                     time.sleep(0.5)
                     display_board = False
                     continue
-                else:
-                    result, message = game.undo_move()
-                    print(message)
-                    time.sleep(0.5)
-                    if result == True:
-                        print(f"{game.players[game.whose_turn].name} has used an undo. Remaining undos: {game.players[game.whose_turn].undos-1}")
-                        game.players[game.whose_turn].undos -= 1
+
+                else : 
+
+                    
+                    move = game.move_stack.pop()
+
+
+                    if game.players[move["prev_turn"]].undos <=0:
+                        print(f'No undos left for {game.players[move["prev_turn"]].name}.')
+                        game.move_stack.append(move)
                         time.sleep(0.5)
-                        continue
-                    else:
                         display_board = False
                         continue
+                    else:
+                        game.move_stack.append(move)
+                        result, message = game.undo_move()
+                        print(message)
+                        time.sleep(0.5)
+                        if result == True:
+                            print(f"{game.players[game.whose_turn].name} has used an undo. Remaining undos: {game.players[game.whose_turn].undos-1}")
+                            game.players[game.whose_turn].undos -= 1
+                            time.sleep(0.5)
+                            continue
+                        else:
+                            display_board = False
+                            continue
             
             if user_input == 'load':
                 filename = ui.prompt_filename_load()
@@ -167,6 +182,16 @@ def main():
                 time.sleep(0.5)
                 display_board = False
                 continue
+
+            if user_input == 'endturn' or user_input == 'et':
+                if not game.players[game.whose_turn].moved_this_turn:
+                    print("You must make a move before ending your turn.")
+                    time.sleep(0.5)
+                    display_board = False
+                    continue
+                else:
+                    game.switch_turn()
+                    continue
 
 
             

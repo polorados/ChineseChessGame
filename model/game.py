@@ -125,8 +125,11 @@ class Game:
 
     def move_piece(self, from_pos, to_pos):
         mover = self.board.piece_at(from_pos)
+
         if mover is None:
             return False, "No piece at source."
+        if mover.owner.moved_this_turn:
+            return False, "You have already moved this turn. End your turn to switch players."
         if mover.owner is not self.players[self.whose_turn]: #check whether mover's turn
             return False, "Not your turn."
         
@@ -153,7 +156,7 @@ class Game:
 
         self.board.move_piece(mover, to_pos)
         self.record_move(mover.name, from_pos.row, from_pos.col, to_pos.row, to_pos.col, result2)
-        self.switch_turn()
+        self.players[self.whose_turn].moved_this_turn = True
         return True,"Move successful."
 
     def record_move(self,piece_id,from_posx, from_posy, to_posx, to_posy, captured_piece):
@@ -190,6 +193,7 @@ class Game:
             captured_piece.owner.add_piece(captured_piece)
 
         self.whose_turn = prev_turn 
+        self.players[self.whose_turn].moved_this_turn = False
         if self.move_history:
             self.move_history.pop()  # Remove last move from history
         

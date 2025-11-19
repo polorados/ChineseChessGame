@@ -4,6 +4,7 @@ class Player:
         self.name=name
         self.pieces=[]
         self.undos=3
+        self.moved_this_turn=False
 
     def add_piece(self, piece):
         if piece not in self.pieces:

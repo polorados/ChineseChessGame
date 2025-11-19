@@ -10,11 +10,13 @@ class UserInterface:
             'move': 'Make a move (e.g., "e2 e4")',
             'history': 'Show move history',
             'status': 'Show current game status',
+            'endturn' : 'End current player turn',
             'resign': 'Resign from the game',
-            'undo': "Undo previous player's last move",
+            'undo': "Undo the most recent made move",
             'save': 'Save the current game',
             'load': 'Load a saved game',
             'quit': 'Exit the game'
+            
         }
     
     def display_welcome2(self):
