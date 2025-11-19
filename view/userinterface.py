@@ -31,8 +31,10 @@ class UserInterface:
         print("           WELCOME TO JUNGLE CHESS")
         print("=" * 50)
         while True:
-            choice = input("Load saved game or start new? (load/new): ").strip().lower()
+            choice = input("Load saved game or start new? (load/new) or 'quit' to exit: ").strip().lower()
             print()
+            if choice in ('quit', 'exit', 'q'):
+                return "quit"
             if choice in ("load", "new"):
                 return choice
             print("Please type 'load' or 'new'.")
@@ -77,10 +79,12 @@ class UserInterface:
                 print("Available save files:")
                 for f in available_files:
                     print(f" - {f}")
-            filename = input("Enter filename you want to load(default 'game.jungle'): ").strip()
+            filename = input("Enter filename you want to load(default 'game.jungle') or 'quit' to exit: ").strip()
             print()
             if filename == "":
                 filename = "game.jungle"
+            if filename.lower() in ('quit', 'exit', 'q'):
+                return "quit"
             else :
                 if not filename.endswith(".jungle"):
                     filename += ".jungle"
@@ -97,10 +101,12 @@ class UserInterface:
                 print("Available record files:")
                 for f in available_files:
                     print(f" - {f}")
-            filename = input("Enter filename you want to playback (default 'game.record'): ").strip()
+            filename = input("Enter filename you want to playback (default 'game.record') or 'quit' to exit: ").strip()
             print()
             if filename == "":
                 filename = "game.record"
+            if filename.lower() in ('quit', 'exit', 'q'):
+                return "quit"
             else :
                 if not filename.endswith(".record"):
                     filename += ".record"
@@ -116,9 +122,11 @@ class UserInterface:
             print("Existing save files (don't pick the same name as it will overwrite):")
             for f in available_files:
                 print(f" - {f}")
-        filename = input("Enter filename to save the game (default 'game.jungle'): ").strip()
+        filename = input("Enter filename to save the game (default 'game.jungle') or 'quit' to exit: ").strip()
         if filename == "":
             filename = "game.jungle"
+        if filename.lower() in ('quit', 'exit', 'q'):
+            return "quit"
         else :
             if not filename.endswith(".jungle"):
                 filename += ".jungle"
@@ -130,9 +138,11 @@ class UserInterface:
             print("Existing save files (don't pick the same name as it will overwrite):")
             for f in available_files:
                 print(f" - {f}")
-        filename = input("Enter filename to record the game (default 'game.record'): ").strip()
+        filename = input("Enter filename to record the game (default 'game.record') or 'quit' to exit: ").strip()
         if filename == "":
             filename = "game.record"
+        if filename.lower() in ('quit', 'exit', 'q'):
+            return "quit"
         else :
             if not filename.endswith(".record"):
                 filename += ".record"
@@ -259,16 +269,58 @@ class UserInterface:
 
 
     def display_move_prompt(self, game):
-        """Prompt for a move from the current player"""
+        """Prompt for a move from the current player with validation"""
         player_name = game.players[game.whose_turn].name
+        
         try:
-            user_input1 = input(f"\n{player_name}'s turn. Which piece do you want to move? give coordinates (example : a2)").strip().lower()
-            origin = user_input1
-            user_input2 = input("Where do you want to move it to? give coordinates (example : a3)").strip().lower()
-            destination = user_input2
+            # Get and validate origin coordinate
+            while True:
+                user_input1 = input(f"\n{player_name}'s turn. Which piece do you want to move? Give coordinates (example: a2): ").strip().lower()
+                
+                if user_input1 in ('quit', 'exit', 'q'):
+                    return "quit"
+                
+                if self._is_valid_coordinate(user_input1):
+                    origin = user_input1
+                    break
+                else:
+                    print(f"Invalid coordinate '{user_input1}'. Please use format like 'a2' (a-g and 1-9).")
+            
+            # Get and validate destination coordinate
+            while True:
+                user_input2 = input("Where do you want to move it to? Give coordinates (example: a3): ").strip().lower()
+                
+                if user_input2 in ('quit', 'exit', 'q'):
+                    return "quit"
+                
+                if self._is_valid_coordinate(user_input2):
+                    destination = user_input2
+                    break
+                else:
+                    print(f"Invalid coordinate '{user_input2}'. Please use format like 'a3' (a-g and 1-9).")
+                    time.sleep(0.5)
+            
             return origin, destination
+            
         except (EOFError, KeyboardInterrupt):
             return "quit"
+
+    def _is_valid_coordinate(self, coord):
+        """Validate coordinate format and bounds (a-g, 1-9)"""
+        if not coord or len(coord) != 2:
+            return False
+        
+        letter, number = coord[0], coord[1]
+        
+        # Check if letter is between 'a' and 'g'
+        if not ('a' <= letter <= 'g'):
+            return False
+        
+        # Check if number is between '1' and '9'
+        if not ('1' <= number <= '9'):
+            return False
+        
+        return True
  
 
     def display_invalid_move(self, message="Invalid move. Please try again."):
@@ -299,9 +351,21 @@ class UserInterface:
         print(f"\nGame successfully loaded from '{filename}'")
 
     def display_resignation(self, player_name):
-        """Display resignation confirmation"""
-        response = input(f"\n{player_name}, are you sure you want to quit? (y/n): ").strip().lower()
-        return response in ['y', 'yes']
+        """Display resignation confirmation with validation"""
+        while True:
+                response = input(f"\n{player_name}, are you sure you want to resign? (y/n): ").strip().lower()
+                # Handle empty input
+                if response == "":
+                    print("Please enter 'y' for yes or 'n' for no.")
+                    continue
+                # Handle affirmative responses
+                if response in ['y', 'yes', 'quit', 'exit']:
+                    return True
+                # Handle negative responses  
+                if response in ['n', 'no']:
+                    return False
+                # Handle invalid input
+                print(f"Invalid response '{response}'. Please enter 'y' for yes or 'n' for no.")
         
 
     def display_quit_confirmation(self):

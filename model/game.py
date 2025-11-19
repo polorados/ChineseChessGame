@@ -84,6 +84,7 @@ class Game:
         self.move_stack = []
         self.move_history = []
         self.recording = False
+        self.completed = False
 
     
     def initialize_piece(self):

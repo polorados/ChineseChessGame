@@ -52,8 +52,12 @@ def convert_indices_to_coordinate(row, col):
 def main():
     ui = UserInterface()
     choice = ui.display_welcome2()
+    if choice == "quit":
+        sys.exit(0)
     if choice == "load":
         filename = ui.prompt_filename_load()
+        if filename == 'quit':
+            sys.exit(0)
         game = SaveGame.load_game(filename)
 
         # print(f"New game cell type: {type(game.board.grid[3][0][1][0])}")
@@ -80,8 +84,13 @@ def main():
     while True:
         try: 
             if game.recording:
-                ui.display_board(game.board.grid)
+                if display_board:
+                    ui.display_board(game.board.grid)
+                else:
+                    display_board = True
+                
                 ui.display_game_status(game)
+
                 ui.display_help_playback()
 
                 user_input = ui.get_user_input()
@@ -111,6 +120,8 @@ def main():
                     game.recording = False
                     display_board = False
                     choice = ui.display_welcome2()
+                    if choice == 'quit':
+                        sys.exit(0)
                     if choice == "load":
                         filename = ui.prompt_filename_load()
                         game = SaveGame.load_game(filename)
@@ -146,7 +157,10 @@ def main():
 
                 if display_board:
                     ui.display_board(game.board.grid)
-                    ui.display_game_status(game)
+                    if game.completed == False:
+                        ui.display_game_status(game)
+                    else:
+                        ui.display_game_result(game.players[game.whose_turn].name)
                     ui.display_help()
                 if display_board == False:
                     display_board = True
@@ -164,6 +178,11 @@ def main():
                     continue
 
                 if user_input == 'move' or user_input == 'm':
+                    if game.completed:
+                        print("The game has ended. You cannot perform new moves")
+                        time.sleep(0.5)
+                        display_board = False
+                        continue
                     origin,destination = ui.display_move_prompt(game)
                     origin_row, origin_col = convert_coordinate(origin)
                     destination_row, destination_col = convert_coordinate(destination)
@@ -182,6 +201,7 @@ def main():
                         result1, playerwhowon = game.check_victory(mover,destination_position)
                         if result1 == True:
                             ui.display_game_result(game.players[playerwhowon].name)
+                            game.completed = True
                             display_board = False
                             break
                             
@@ -199,17 +219,29 @@ def main():
 
                 
                 if user_input == 'resign':
+                    if game.completed:
+                        print("The game has ended. You cannot resign now.")
+                        time.sleep(0.5)
+                        display_board = False
+                        continue
                     if ui.display_resignation(game.players[game.whose_turn].name):
                         print(f"{game.players[game.whose_turn].name} has resigned")
-                        ui.display_game_result(game.players[1 - game.whose_turn].name)
-                        display_baord = False
-                        break
+                        game.switch_turn()
+                        ui.display_game_result(game.players[game.whose_turn].name)
+                        display_board = False
+                        game.completed = True
+                        continue
                     else:
                         display_board = False
                         continue
 
                 
                 if user_input == 'undo':
+                    if game.completed:
+                        print("The game has ended. You cannot undo moves now.")
+                        time.sleep(0.5)
+                        display_board = False
+                        continue
                     if not game.move_stack:
                         print("No moves to undo.")
                         time.sleep(0.5)
@@ -244,6 +276,9 @@ def main():
                 
                 if user_input == 'load':
                     filename = ui.prompt_filename_load()
+                    if filename == 'quit':
+                        display_board = False
+                        continue
                     loaded_game = SaveGame.load_game(filename)
                     if loaded_game is not None:
                         game = loaded_game
@@ -257,6 +292,9 @@ def main():
                 
                 if user_input == 'record':
                     filename = ui.prompt_filename_record()
+                    if filename == 'quit':
+                        display_board = False
+                        continue
                     SaveGame.save_game(game, filename)
                     print(f"Game recorded to '{filename}'")
                     time.sleep(0.5)
@@ -265,6 +303,9 @@ def main():
 
                 if user_input == 'playback':
                     filename = ui.prompt_filename_playback()
+                    if filename == 'quit':
+                        display_board = False
+                        continue
                     playback_game = SaveGame.load_game(filename)
                     if playback_game is not None:
                         game = Game(playback_game.players[0], playback_game.players[1])
@@ -284,6 +325,9 @@ def main():
 
                 if user_input == 'save':
                     filename = ui.prompt_filename_save()
+                    if filename in ('quit', 'exit', 'q'):
+                        display_board = False
+                        continue
                     SaveGame.save_game(game, filename)
                     print(f"Game saved to '{filename}'")
 
@@ -296,6 +340,11 @@ def main():
                     continue
 
                 if user_input == 'endturn' or user_input == 'et':
+                    if game.completed:
+                        print("The game has ended. You cannot end turns now.")
+                        time.sleep(0.5)
+                        display_board = False
+                        continue
                     if not game.players[game.whose_turn].moved_this_turn:
                         print("You must make a move before ending your turn.")
                         time.sleep(0.5)
