@@ -1,7 +1,28 @@
 class Board:
-    # piece_list : (row, col, piece object)
-    # cell_list: (row,col, (cell_name,owner))
+    """
+    A game board that manages pieces and cells on a grid.
+    
+    The board maintains a grid where each position contains a tuple of
+    (piece, cell). Pieces represent game pieces that can move around the board,
+    while cells represent static board features with names and owners.
+    
+    Attributes:
+        rows (int): Number of rows in the board (default: 9)
+        cols (int): Number of columns in the board (default: 7)
+        grid (list): 2D list representing the board state, where each element
+                    is a tuple (piece, cell)
+    """
+    
     def __init__(self, piece_list, cell_list):
+        """
+        Initialize the board with pieces and cells.
+        
+        Args:
+            piece_list (list): List of tuples in format (row, col, piece_object)
+                            representing initial piece placements
+            cell_list (list): List of tuples in format (row, col, (cell_name, owner))
+                            representing board cells and their properties
+        """
         self.rows = 9
         self.cols = 7
         # Create grid where each position is a tuple (piece, cell)
@@ -9,8 +30,17 @@ class Board:
         #self.move_history = []
         self.setup_board(piece_list, cell_list)
         
-
     def setup_board(self, piece_list, cell_list):
+        """
+        Set up the initial board state with pieces and cells.
+        
+        First clears the board, then places pieces while preserving existing cells,
+        then places cells while preserving existing pieces.
+        
+        Args:
+            piece_list (list): List of tuples (row, col, piece_object)
+            cell_list (list): List of tuples (row, col, (cell_name, owner))
+        """
         # Initialize all positions with (None, None)
         for row in range(self.rows):
             for col in range(self.cols):
@@ -27,12 +57,31 @@ class Board:
             self.grid[row][col] = (current_piece, cell)
 
     def place(self, piece, pos):
+        """
+        Place a piece at the specified position.
+        
+        Used for placing dead pieces or during undo operations. Overwrites
+        any existing piece at the position while preserving the cell.
+        
+        Args:
+            piece: The piece object to place
+            pos: Position object with row and col attributes
+        """
         # place dead piece for undo
         cell = self.grid[pos.row][pos.col][1]
-        self.grid[pos.row][pos.col] = (piece,cell)
+        self.grid[pos.row][pos.col] = (piece, cell)
         piece.position = pos
 
     def remove_piece_at(self, pos):
+        """
+        Remove the piece at the specified position.
+        
+        Args:
+            pos: Position object with row and col attributes
+            
+        Returns:
+            The removed piece object, or None if no piece was present
+        """
         piece, cell = self.grid[pos.row][pos.col]
 
         if piece is not None:
@@ -40,6 +89,16 @@ class Board:
         return piece
 
     def move_piece(self, piece, to_pos):
+        """
+        Move a piece to a new position without validation.
+        
+        Moves the piece from its current position to the target position.
+        If the piece is None or has no current position, does nothing.
+        
+        Args:
+            piece: The piece object to move
+            to_pos: Target position object with row and col attributes
+        """
         #just move the cell without validation
         if piece is None:
             return 
@@ -54,125 +113,26 @@ class Board:
         self.grid[to_pos.row][to_pos.col] = (piece, to_pos_cell)
         piece.position = to_pos
 
-    def bound_check(self,pos):
-        return 0 <= pos.row < self.rows and 0 <= pos.col < self.cols
-    
-    def piece_at(self,pos):
-
+    def piece_at(self, pos):
+        """
+        Get the piece at the specified position.
+        
+        Args:
+            pos: Position object with row and col attributes
+            
+        Returns:
+            The piece object at the position, or None if no piece is present
+        """
         return self.grid[pos.row][pos.col][0]
     
-    def cell_at(self,pos):
-        return self.grid[pos.row][pos.col][1]
-    
-    # def is_valid_move(self, piece, new_position):
-
-    #     row, col = new_position
-    #     if row < 0 or row >= self.rows or col < 0 or col >= self.cols:
-    #         return False  # Out of bounds
-    #     target = self.grid[row][col]
-    #     origin = self.grid[piece.position.row][piece.position.col]
-    
-    #     if piece.name != 'TIGER' and piece.name != 'LION':
-
-    #         if abs(row - piece.position.row) + abs(col - piece.position.col) == 1:
-    #             if target[0] == None and target[1] != 'river':
-    #                 return True
-    #             if target[0] != None and target[0].owner != piece.owner and target[1].type != 'river':
-    #                 if target[0].rank <= piece.rank:
-    #                     return True
-    #             if piece.rank == 1: 
-    #                 if target[0] != None and target[0].owner != piece.owner:
-    #                     if target[0].rank == 8:
-    #                         return True
-    #                  # 
-    #                 if target[1].type == 'river':
-    #                     if target[0] == None:
-    #                         return True
-    #                     elif target[0].name == 'RAT':
-    #                         if target[0].owner != piece.owner:
-    #                             if origin[1].type == 'river':
-    #                                 return True
-    #                             else :
-    #                                 return False
-    #                 if origin[1].type == 'river' and target[1].type != 'river'and target[0] != None:   
-    #                     return False
-    #     else : 
-    #         if abs(row - piece.position.row) + abs(col - piece.position.col) == 1:
-    #             if target[0] == None and target[1] != 'river':
-    #                 return True
-    #             if target[0] != None and target[0].owner != piece.owner and target[1].type != 'river':
-    #                 if target[0].rank <= piece.rank:
-    #                     return True
-    #         elif self.grid[row-1][col][1].type == 'river' and self.grid[piece.position.row+1][piece.position.col].type == 'river':
-    #             if col == piece.position.col:
-    #                 for i in range (piece.position.row+1, row):
-    #                     if self.grid[i][col][0] != None:
-    #                         return False
-    #                 if target[0] == None:
-    #                     return True
-    #                 elif target[0] != None and target[0].owner != piece.owner and target[0].rank <= piece.rank:
-    #                     return True
-    #                 else: 
-    #                     return False
-                    
-    #         elif self.grid[row+1][col][1].type == 'river' and self.grid[piece.position.row-1][piece.position.col].type == 'river':
-    #             if col == piece.position.col:
-    #                 for i in range (row+1, piece.position.row):
-    #                     if self.grid[i][col][0] != None:
-    #                         return False
-    #                 if target[0] == None:
-    #                     return True
-    #                 elif target[0] != None and target[0].owner != piece.owner and target[0].rank <= piece.rank:
-    #                     return True
-    #                 else: 
-    #                     return False
-            
-    #         elif self.grid[row][col-1][1].type == 'river' and self.grid[piece.position.row][piece.position.col+1].type == 'river':
-    #             if row == piece.position.row:
-    #                 for i in range (piece.position.col+1, col):
-    #                     if self.grid[row][i][0] != None:
-    #                         return False
-    #                 if target[0] == None:
-    #                     return True
-    #                 elif target[0] != None and target[0].owner != piece.owner and target[0].rank <= piece.rank:
-    #                     return True
-    #                 else: 
-    #                     return False
-                    
-    #         elif self.grid[row][col+1][1].type == 'river' and self.grid[piece.position.row][piece.position.col-1].type == 'river':
-    #             if row == piece.position.row:
-    #                 for i in range (col+1, piece.position.col):
-    #                     if self.grid[row][i][0] != None:
-    #                         return False
-    #                 if target[0] == None:
-    #                     return True
-    #                 elif target[0] != None and target[0].owner != piece.owner and target[0].rank <= piece.rank:
-    #                     return True
-    #                 else: 
-    #                     return False
-            
-
-    # def update_position(self, piece, new_position):
-    #     row, col = new_position
-    #     target = self.grid[row][col]
-    #     origin = self.grid[piece.position.row][piece.position.col]
-    #     if target[0] != None:
-    #         target[0].is_captured = True
-    #         target = (piece, target[1])
-    #         piece.position = new_position
-    #         origin = (None, origin[1])
-    #     elif target[1].type == 'trap' and target[1].owner != piece.owner:
-    #         piece.is_captured = True
-    #         target = (None, None)
-    #         origin = (None, origin[1])
-    #     elif target[1].type == 'den' and target[1].owner != piece.owner:
-    #         target = (piece, None)
-    #         piece.position = new_position
-    #         origin = (None, origin[1])
-    #     else :
-    #         target = (piece, target[1])
-    #         piece.position = new_position
-    #         origin = (None, origin[1])
+    def cell_at(self, pos):
+        """
+        Get the cell at the specified position.
         
-
+        Args:
+            pos: Position object with row and col attributes
             
+        Returns:
+            The cell object at the position, or None if no cell is defined
+        """
+        return self.grid[pos.row][pos.col][1]
