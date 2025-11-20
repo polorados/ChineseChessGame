@@ -1,0 +1,15 @@
+## Command Interface
+
+### Validation & Feedback
+- All user inputs undergo validation with immediate feedback
+- Invalid commands display clear error messages and re-prompt
+- Type `help` to view available commands (disabled during active input sequences)
+
+### Navigation & Control
+- Commands `exit` or `quit` available at any prompt to cancel current action
+- Automatic command lists displayed at turn start and after actions
+
+### Display Behavior
+- Rapid screen updates may cause brief messages to scroll out of view
+- Scroll terminal history to review missed feedback
+- Important notifications include intentional pauses for readability

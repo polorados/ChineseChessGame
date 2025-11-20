@@ -104,6 +104,7 @@ def main():
                     
                   
                     game.players[game.whose_turn].moved_this_turn = False
+                    print(f"Replaying move: {game.move_history[0]}")
                     origin = game.move_history[0][1]
                     destination = game.move_history[0][2]
                     origin_row, origin_col = convert_coordinate(origin)
@@ -213,7 +214,7 @@ def main():
                         continue
                     
                 if user_input == 'history':
-                    ui.display_move_history(game.move_history)
+                    ui.display_move_history(game)
                     display_board = False
                     continue
 

@@ -1,0 +1,4 @@
+All user stories have been implemented and tested. 
+For the undo move user story, we have implemented it such that it undos the latest move even if it was an opponent's move.
+For the record user story, we have implemented it such that during the replay, you can only view the next move until the end of the recording, 
+and cannot go back to previous moves.

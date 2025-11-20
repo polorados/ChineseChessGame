@@ -42,17 +42,7 @@ class UserInterface:
             time.sleep(0.5)
         
 
-    def display_welcome(self):
-        # Display a welcome message
-        print("=" * 50)
-        print("           WELCOME TO JUNGLE CHESS")
-        print("=" * 50)
-        print("\nCommands:")
-        for cmd, desc in self.commands.items():
-            print(f"  {cmd:8} - {desc}")
-        print("\nEnter 'help' at any time to see available commands.")
-        print("=" * 50)
-        print()
+
 
     def get_user_input(self):
         # Get command input from the user
@@ -190,8 +180,9 @@ class UserInterface:
 
         print("=" * 40)
 
-    def display_move_history(self, history):
+    def display_move_history(self, game):
         # Display the history of moves
+        history = game.move_history
         if not history:
             print("No moves have been made yet.")
             return
@@ -204,9 +195,9 @@ class UserInterface:
         for i, move in enumerate(history, 1):
             move_number = (i + 1) // 2
             if i % 2 == 1:  # White's move
-                print(f"white move {move_number}. {move}", end="")
+                print(f"{game.players[0].name} move {move_number}. {move}", end="")
             else:  # Black's move
-                print(f"black move {move_number}. {move}")
+                print(f"{game.players[1].name} move {move_number}. {move}")
         
         # If last move was white and no black response yet
         if len(history) % 2 == 1:
@@ -323,13 +314,9 @@ class UserInterface:
         return True
  
 
-    def display_invalid_move(self, message="Invalid move. Please try again."):
-        """Display invalid move message"""
-        print(f"\n{message}")
 
-    def display_valid_move(self, move_from, move_to, piece_symbol):
-        """Display confirmation of a valid move"""
-        print(f"\nMove accepted: {piece_symbol} from {move_from} to {move_to}")
+
+
 
     def display_game_result(self, winner):
         """Display game result (win, draw, resignation)"""
@@ -342,13 +329,9 @@ class UserInterface:
 
         print("=" * 50)
 
-    def display_save_success(self, filename):
-        """Display successful save message"""
-        print(f"\nGame successfully saved to '{filename}'")
 
-    def display_load_success(self, filename):
-        """Display successful load message"""
-        print(f"\nGame successfully loaded from '{filename}'")
+
+
 
     def display_resignation(self, player_name):
         """Display resignation confirmation with validation"""
@@ -373,6 +356,3 @@ class UserInterface:
         response = input("\nAre you sure you want to quit? (y/n): ").strip().lower()
         return response in ['y', 'yes']
     
-    def display_error(self, error_message):
-        """Display general error messages"""
-        print(f"\nError: {error_message}")

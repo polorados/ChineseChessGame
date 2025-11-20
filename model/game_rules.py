@@ -89,26 +89,23 @@ class GameRules:
 
     # 3. Rat can capture Elephant (special exception)
     if attacker.rank == Rank.RAT and defender.rank == Rank.ELEPHANT:
+      start_terrain, _ = board.cell_at(from_pos)
+      # If attacker is in river and defender on land -> not allowed (and vice versa)
+      if start_terrain == "~" and dest_terrain != "~":
+        return False, "Rat cannot capture from river to land."
+      if start_terrain != "~" and dest_terrain == "~":
+        return False, "Rat cannot capture from land to river."
       return True, None
 
     # 4. If attacker is Rat and it's in river, cannot capture piece on land
-    # if attacker.rank == Rank.RAT and attacker.position:
-    #   attacker_cell = attacker.position
-      
-    #   _, current_cell = defender.owner.game.board.grid[attacker_cell.row][attacker_cell.col]
-    #   terrain, _ = current_cell if current_cell else ("land", None)
-      
-    #   if terrain == "river" and dest_terrain != "river":
-    #     return False, "Rat cannot capture from river to land."
-    #   if terrain != "river" and dest_terrain == "river":
-    #     return False, "Rat cannot capture from land to river."
+
     
     if attacker.rank == Rank.RAT:
       start_terrain, _ = board.cell_at(from_pos)
       # If attacker is in river and defender on land -> not allowed (and vice versa)
-      if start_terrain == "river" and dest_terrain != "river":
+      if start_terrain == "~" and dest_terrain != "~":
         return False, "Rat cannot capture from river to land."
-      if start_terrain != "river" and dest_terrain == "river":
+      if start_terrain != "~" and dest_terrain == "~":
         return False, "Rat cannot capture from land to river."
     
     # 5.  piece can capture if rank >= defender.rank
