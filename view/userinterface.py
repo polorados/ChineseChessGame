@@ -173,9 +173,9 @@ class UserInterface:
         
         current_player = game.players[game.whose_turn].name
         if current_player == game.players[0].name:
-            position = "top *"
+            position = "pieces marked with *"
         else: 
-            position = "bottom #"
+            position = "pieces marked with #"
         print(f"Current turn: {current_player} ({position})")
 
         print("=" * 40)
