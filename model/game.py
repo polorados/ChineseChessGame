@@ -88,6 +88,14 @@ class Game:
 
     
     def initialize_piece(self):
+        """
+        Initialize piece based on PIECE_MAP.
+        Each piece is given:
+            - symbol
+            - rank
+            - owner (player0 for top pieces, player1 for bottom pieces)
+            - position
+        """
         ret = []
         for i, line in enumerate(PIECE_MAP):
             for j,chr in enumerate(line):
@@ -98,6 +106,8 @@ class Game:
                 pos = Position(i,j)
                 piece = Piece(chr,rank,owner,pos)
                 ret.append((i,j,piece))
+                
+        # Add pieces to Player piece lists
         for i,j,piece in ret:
             if piece.owner == self.players[0]:
                 self.players[0].add_piece(piece)
@@ -106,6 +116,14 @@ class Game:
         return ret
     
     def initialize_cell(self):
+        """
+        Initialize cell based on CELL_MAP.
+        . = land
+        t = trap
+        d = den
+        r = river
+        Cell should be in the form of (terrain name, owner)
+        """
         ret = []
         for i,line in enumerate(CELL_MAP):
             for j,chr in enumerate(line):
@@ -126,20 +144,31 @@ class Game:
     #     self.board.setup_board(self.initialize_piece(), self.initialize_cell())
 
     def move_piece(self, from_pos, to_pos):
+        """
+        move piece
+            1. Get moving piece
+            2. Validate move via GameRules
+            3. Store undo information
+            4. Handle capture if needed
+            5. Move piece on board
+            6. Switch Turn
+            7. Record move
+        """
         mover = self.board.piece_at(from_pos)
-
+        
         if mover is None:
             return False, "No piece at source."
         if mover.owner.moved_this_turn:
             return False, "You have already moved this turn. End your turn to switch players."
         if mover.owner is not self.players[self.whose_turn]: #check whether mover's turn
             return False, "Not your turn."
-        
+
+        # (bool, capturedPiece | errorMsg)
         # if is_valid == true: result = captured_piece, else result = msg
         is_valid, result = self.rules.validate_move(mover, from_pos, to_pos, self.board) #no valid move
         if not is_valid:
             return False,result
-        
+        # store move information for undoing
         undo_object = {
             "piece": mover,
             "from_pos": copy.deepcopy(from_pos),
@@ -149,20 +178,31 @@ class Game:
         }
         self.move_stack.append(undo_object) #record move for undo
         result2 = result
-        # remove dead piece from board
+        
+        # remove captured piece from board
         # result = captured_piece
         if result is not None:
             result.is_alive = False
             self.board.remove_piece_at(to_pos)
             result.owner.remove_piece(result)
-
+            
+        # Move piece on board
         self.board.move_piece(mover, to_pos)
+
+        # Add to history
         if not self.recording:
             self.record_move(mover.name, from_pos.row, from_pos.col, to_pos.row, to_pos.col, result2)
         self.players[self.whose_turn].moved_this_turn = True
         return True,"Move successful."
 
     def record_move(self,piece_id,from_posx, from_posy, to_posx, to_posy, captured_piece):
+        """
+        Store readable move:
+            - piece id
+            - origin position
+            - destination coordinate
+            - captured piece name
+        """
         captured_piece_name = "None"
         origin = convert_indices_to_coordinate(from_posx, from_posy)
         destination = convert_indices_to_coordinate(to_posx, to_posy)
@@ -171,6 +211,10 @@ class Game:
         self.move_history.append((piece_id,origin, destination ,captured_piece_name))
 
     def undo_move(self): 
+        """
+        Undo moves from stack.
+        """
+        
         #undo move from top of the stack
 
         if not self.move_stack:
@@ -184,11 +228,14 @@ class Game:
         captured_piece = move["captured_piece"]
         prev_turn = move["prev_turn"]
 
+        # Remove piece from destination
         self.board.remove_piece_at(to_pos)
-        
+
+        # Put mover back to original position
         self.board.place(mover, from_pos)
         mover.position = from_pos
 
+        # Restore captured piece
         if captured_piece is not None:
             captured_piece.is_alive = True
             captured_piece.position = to_pos
@@ -203,19 +250,37 @@ class Game:
         return True,"Move undone."
 
     def switch_turn(self):
+        """
+        Switch current player. False moved_this_turn flag.
+        """
         self.players[self.whose_turn].moved_this_turn = False
         self.whose_turn = 1-self.whose_turn
 
 
     def get_owner_idx(self, owner):
+        """
+        Return player's index = 0 or 1.
+        """
         return 0 if owner is self.players[0] else 1
 
     def has_alive_pieces(self, owner_idx):
+        """
+        Return True if the player has any alive pieces.
+        """
+        
         player = self.players[owner_idx]
         
         return len(player.get_alive_pieces()) > 0
     
     def check_victory(self,mover,to_pos):
+        """
+        Victory if
+        1. Enter opponent's den
+        2. Opponent has no alive pieces
+        
+        Returns (True, winnerIndex) or (False, None)
+        """
+        
         # return (bool,winner). winner = None if bool = False
         cell = self.board.grid[to_pos.row][to_pos.col][1]
         mover_idx = self.get_owner_idx(mover)
