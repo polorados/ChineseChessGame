@@ -11,6 +11,8 @@ class GameController:
         self.ui = ui
         self.game = None
         self.display_board = True
+        self.backup_game = None
+
 
     @staticmethod
     def convert_coordinate(coord):
@@ -55,8 +57,9 @@ class GameController:
         while True:
             try:
                 if self.game.recording:
-                    self.display_board = True
                     self.playback_mode()
+                    
+
                 else:
                     self.play_mode()
             except KeyboardInterrupt:
@@ -73,10 +76,9 @@ class GameController:
 
     # ---------------- Playback Mode ----------------
     def playback_mode(self):
-        if self.display_board:
-            self.ui.display_board(self.game.board.grid)
-            print("\nPlayback Mode Commands: 'next' to play next move, 'exit' to return to main menu")
-        self.display_board = True
+
+        self.ui.display_board(self.game.board.grid)
+        print("\nPlayback Mode Commands: 'next' to play next move, 'exit' to return to main menu")
 
         try:
             user_input = self.ui.get_user_input()
@@ -85,6 +87,7 @@ class GameController:
                 self.play_next_move()
             elif user_input == 'exit':
                 self.game.recording = False
+                self.display_board = True
             else:
                 print("Invalid command. Type 'next' or 'exit'.")
                 time.sleep(0.5)
@@ -106,6 +109,9 @@ class GameController:
 
     # ---------------- Play Mode ----------------
     def play_mode(self):
+        if self.backup_game:
+            self.game = self.backup_game
+            self.backup_game = None
         if self.display_board:
             self.ui.display_board(self.game.board.grid)
             if not self.game.completed:
@@ -122,7 +128,7 @@ class GameController:
             'status': lambda: None,
             'move': self.handle_move,
             'm': self.handle_move,
-            'history': lambda: self.ui.display_move_history(self.game),
+            'history': self.handle_history,
             'resign': self.handle_resign,
             'undo': self.handle_undo,
             'load': self.handle_load,
@@ -158,6 +164,11 @@ class GameController:
             self.display_board = True
         else:
             self.display_board = False
+
+    def handle_history(self):
+
+        self.ui.display_move_history(self.game)
+        self.display_board = False
 
     def handle_resign(self):
         if self.game.completed:
@@ -202,7 +213,7 @@ class GameController:
             print(f"Game loaded from {filename}")
         else:
             print(f"Failed to load game from {filename}")
-        self.display_board = False
+        self.display_board = True
 
     def handle_save(self):
         filename = self.ui.prompt_filename_save()
@@ -226,6 +237,8 @@ class GameController:
             return
         playback_game = SaveGame.load_game(filename)
         if playback_game:
+            self.backup_game = self.game
+
             self.game = Game(playback_game.players[0], playback_game.players[1])
             self.game.move_history = playback_game.move_history
             self.game.recording = True
