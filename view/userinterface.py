@@ -167,7 +167,7 @@ class UserInterface:
             print("No game in progress.")
             return
 
-        print("\n" + "=" * 40)
+        print("\n" + "=" * 70)
 
         # Display current player
         
@@ -176,9 +176,14 @@ class UserInterface:
             position = "pieces marked with *"
         else: 
             position = "pieces marked with #"
-        print(f"Current turn: {current_player} ({position})")
+        if game.players[game.whose_turn].moved_this_turn:
+            current_turn = len(game.move_history)
+        else:
+            current_turn = len(game.move_history)+1
+        
+        print(f"Current turn: {current_turn} || Current player: {current_player} ({position})")
 
-        print("=" * 40)
+        print("=" * 70)
 
     def display_move_history(self, game):
         # Display the history of moves
