@@ -16,6 +16,13 @@ class GameController:
 
     @staticmethod
     def convert_coordinate(coord):
+        """
+        Convert a human-readable coordinate like 'a1' to internal (row, col) indices.
+
+        Board is assumed to have:
+        - columns labeled 'a'..'g' (0..6)
+        - rows 1..9, where '9' is the top row (row_index 0) and '1' is the bottom (row_index 8).
+        """
         if len(coord) != 2:
             raise ValueError("Coordinate must be 2 characters (e.g., 'a1', 'g9')")
         letter = coord[0].lower()
@@ -26,6 +33,10 @@ class GameController:
 
     @staticmethod
     def convert_indices_to_coordinate(row, col):
+        """
+        Convert internal (row, col) indices back to a human-readable coordinate like 'a1'.
+        Inverse of convert_coordinate.
+        """
         if not (0 <= row <= 8 and 0 <= col <= 6):
             raise ValueError("Row must be 0-8, col must be 0-6")
         letter = chr(ord('a') + col)
@@ -33,6 +44,10 @@ class GameController:
         return f"{letter}{number}"
 
     def initialize_game(self):
+        """
+        Entry point to set up a new or loaded game.
+        Asks the UI whether to start new, load, or quit.
+        """
         choice = self.ui.display_welcome2()
         if choice == "quit":
             sys.exit(0)
@@ -54,6 +69,11 @@ class GameController:
             self.game = Game(Player(player1_name), Player(player2_name))
 
     def start_game_loop(self):
+        """
+        Main loop for the controller.
+        Switches between playback mode and normal play mode,
+        and handles top-level exceptions and quitting.
+        """
         while True:
             try:
                 if self.game.recording:
@@ -76,7 +96,10 @@ class GameController:
 
     # ---------------- Playback Mode ----------------
     def playback_mode(self):
-
+        """
+        Playback mode: replays recorded moves of a previous game.
+        User can type 'next' to step through moves or 'exit' to leave playback.
+        """
         self.ui.display_board(self.game.board.grid)
         print("\nPlayback Mode Commands: 'next' to play next move, 'exit' to return to main menu")
 
@@ -95,6 +118,9 @@ class GameController:
             print(f"An error occurred during playback: {e}")
 
     def play_next_move(self):
+        """
+        Plays the next recorded move from move_history during playback.
+        """
         if not self.game.move_history:
             print("End of playback reached.")
             time.sleep(0.5)
@@ -109,6 +135,10 @@ class GameController:
 
     # ---------------- Play Mode ----------------
     def play_mode(self):
+        """
+        Normal game mode where players enter commands (move, save, undo, etc.).
+        Handles one command per call.
+        """
         if self.backup_game:
             self.game = self.backup_game
             self.backup_game = None
@@ -147,6 +177,10 @@ class GameController:
 
     # ---------------- Command Handlers ----------------
     def handle_move(self):
+        """
+        Handle a 'move' command: ask for origin and destination,
+        validate and apply the move, and check for victory.
+        """
         if self.game.completed:
             print("The game has ended. You cannot perform new moves")
             return
@@ -166,11 +200,16 @@ class GameController:
             self.display_board = False
 
     def handle_history(self):
-
+        """
+        Display the list of moves played so far.
+        """
         self.ui.display_move_history(self.game)
         self.display_board = False
 
     def handle_resign(self):
+        """
+        Handle current player resignation and end the game.
+        """
         if self.game.completed:
             print("The game has ended. You cannot resign now.")
             return
@@ -182,6 +221,10 @@ class GameController:
         self.display_board = False
 
     def handle_undo(self):
+        """
+        Undo the last move if possible and decrement the undo counter
+        for the player who uses it.
+        """
         if self.game.completed:
             print("The game has ended. You cannot undo moves now.")
             return
@@ -204,6 +247,9 @@ class GameController:
         self.display_board = True
 
     def handle_load(self):
+        """
+        Load a saved game from a file and replace the current game.
+        """
         filename = self.ui.prompt_filename_load()
         if filename == 'quit':
             return
@@ -216,6 +262,9 @@ class GameController:
         self.display_board = True
 
     def handle_save(self):
+        """
+        Save the current game state to a file.
+        """
         filename = self.ui.prompt_filename_save()
         if filename in ('quit', 'exit', 'q'):
             return
@@ -224,6 +273,10 @@ class GameController:
         self.display_board = False
 
     def handle_record(self):
+        """
+        Record (save) the current game for later playback.
+        Typically similar to save, but semantically meant for replay.
+        """
         filename = self.ui.prompt_filename_record()
         if filename == 'quit':
             return
@@ -232,6 +285,10 @@ class GameController:
         self.display_board = False
 
     def handle_playback(self):
+        """
+        Enter playback mode using a previously recorded game.
+        The current game is stored in backup_game and restored after playback.
+        """
         filename = self.ui.prompt_filename_playback()
         if filename == 'quit':
             return
@@ -248,6 +305,9 @@ class GameController:
         self.display_board = False
 
     def handle_endturn(self):
+        """
+        Explicitly end the current player's turn, if they've made a move.
+        """
         if self.game.completed:
             print("The game has ended. You cannot end turns now.")
             return
@@ -257,10 +317,16 @@ class GameController:
             self.game.switch_turn()
 
     def handle_quit(self):
+        """
+        Handle quitting from within the game (not via KeyboardInterrupt).
+        """
         if self.ui.display_quit_confirmation():
             print("Thanks for playing!")
             sys.exit(0)
 
     def invalid_command(self):
+        """
+        Fallback handler when user enters an unrecognized command.
+        """
         print("Invalid command. Type 'help' or 'h' for a list of commands.")
         self.display_board = False
